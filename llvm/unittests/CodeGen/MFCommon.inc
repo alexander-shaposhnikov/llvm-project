@@ -75,7 +75,7 @@ public:
       : TargetSubtargetInfo(Triple(""), "", "", "", {}, {}, nullptr, nullptr,
                             nullptr, nullptr, nullptr, nullptr),
         FL(), TL(TM) {}
-  ~BogusSubtarget() override {}
+  ~BogusSubtarget() override = default;
 
   const TargetFrameLowering *getFrameLowering() const override { return &FL; }
 
@@ -106,7 +106,7 @@ public:
                           CodeModel::Small, CodeGenOpt::Default),
         ST(*this) {}
 
-  ~BogusTargetMachine() override {}
+  ~BogusTargetMachine() override = default;
 
   const TargetSubtargetInfo *getSubtargetImpl(const Function &) const override {
     return &ST;

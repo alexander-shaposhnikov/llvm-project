@@ -43,7 +43,7 @@ protected:
 
 public:
   CGHLSLRuntime(CodeGenModule &CGM) : CGM(CGM) {}
-  virtual ~CGHLSLRuntime() {}
+  virtual ~CGHLSLRuntime() = default;
 
   void annotateHLSLResource(const VarDecl *D, llvm::GlobalVariable *GV);
 

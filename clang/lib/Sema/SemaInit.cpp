@@ -6856,7 +6856,7 @@ struct IndirectLocalPathEntry {
     const Decl *D = nullptr;
     const LambdaCapture *Capture;
   };
-  IndirectLocalPathEntry() {}
+  IndirectLocalPathEntry() = default;
   IndirectLocalPathEntry(EntryKind K, Expr *E) : Kind(K), E(E) {}
   IndirectLocalPathEntry(EntryKind K, Expr *E, const Decl *D)
       : Kind(K), E(E), D(D) {}

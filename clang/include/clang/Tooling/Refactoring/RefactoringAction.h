@@ -38,7 +38,7 @@ namespace tooling {
 ///     the declaration is passed using a command-line argument.
 class RefactoringAction {
 public:
-  virtual ~RefactoringAction() {}
+  virtual ~RefactoringAction() = default;
 
   /// Returns the name of the subcommand that's used by clang-refactor for this
   /// action.

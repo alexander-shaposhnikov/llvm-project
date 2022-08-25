@@ -18,7 +18,7 @@ using namespace llvm;
 
 class TaskQueueTest : public testing::Test {
 protected:
-  TaskQueueTest() {}
+  TaskQueueTest() = default;
 };
 
 TEST_F(TaskQueueTest, OrderedFutures) {

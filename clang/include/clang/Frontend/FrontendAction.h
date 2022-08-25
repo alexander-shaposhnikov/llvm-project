@@ -250,7 +250,7 @@ protected:
   void ExecuteAction() override;
 
 public:
-  ASTFrontendAction() {}
+  ASTFrontendAction() = default;
   bool usesPreprocessorOnly() const override { return false; }
 };
 

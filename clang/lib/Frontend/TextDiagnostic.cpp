@@ -667,7 +667,7 @@ TextDiagnostic::TextDiagnostic(raw_ostream &OS,
                                DiagnosticOptions *DiagOpts)
   : DiagnosticRenderer(LangOpts, DiagOpts), OS(OS) {}
 
-TextDiagnostic::~TextDiagnostic() {}
+TextDiagnostic::~TextDiagnostic() = default;
 
 void TextDiagnostic::emitDiagnosticMessage(
     FullSourceLoc Loc, PresumedLoc PLoc, DiagnosticsEngine::Level Level,

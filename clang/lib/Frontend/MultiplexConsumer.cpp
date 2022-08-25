@@ -264,7 +264,7 @@ MultiplexConsumer::MultiplexConsumer(
   }
 }
 
-MultiplexConsumer::~MultiplexConsumer() {}
+MultiplexConsumer::~MultiplexConsumer() = default;
 
 void MultiplexConsumer::Initialize(ASTContext &Context) {
   for (auto &Consumer : Consumers)

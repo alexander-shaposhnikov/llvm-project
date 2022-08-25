@@ -147,7 +147,7 @@ class ProcessExperimentalOptionValueProperties
 public:
   ProcessExperimentalOptionValueProperties()
       : Cloneable(
-            ConstString(Properties::GetExperimentalSettingsName())) {}
+            ConstString(Properties::GetExperimentalSettingsName())) = default;
 };
 
 ProcessExperimentalProperties::ProcessExperimentalProperties()

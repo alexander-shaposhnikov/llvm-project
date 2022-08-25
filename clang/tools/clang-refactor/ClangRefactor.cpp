@@ -52,7 +52,7 @@ namespace {
 /// Stores the parsed `-selection` argument.
 class SourceSelectionArgument {
 public:
-  virtual ~SourceSelectionArgument() {}
+  virtual ~SourceSelectionArgument() = default;
 
   /// Parse the `-selection` argument.
   ///

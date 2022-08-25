@@ -17,7 +17,7 @@
 namespace llvm {
 namespace exegesis {
 
-ExegesisTarget::~ExegesisTarget() {} // anchor.
+ExegesisTarget::~ExegesisTarget() = default; // anchor.
 
 static ExegesisTarget *FirstTarget = nullptr;
 
@@ -145,7 +145,7 @@ const PfmCountersInfo &ExegesisTarget::getPfmCounters(StringRef CpuName) const {
   return *Found->PCI;
 }
 
-ExegesisTarget::SavedState::~SavedState() {} // anchor.
+ExegesisTarget::SavedState::~SavedState() = default; // anchor.
 
 namespace {
 

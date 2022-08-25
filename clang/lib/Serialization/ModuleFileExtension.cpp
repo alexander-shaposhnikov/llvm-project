@@ -11,10 +11,10 @@ using namespace clang;
 
 char ModuleFileExtension::ID = 0;
 
-ModuleFileExtension::~ModuleFileExtension() {}
+ModuleFileExtension::~ModuleFileExtension() = default;
 
 void ModuleFileExtension::hashExtension(ExtensionHashBuilder &HBuilder) const {}
 
-ModuleFileExtensionWriter::~ModuleFileExtensionWriter() {}
+ModuleFileExtensionWriter::~ModuleFileExtensionWriter() = default;
 
-ModuleFileExtensionReader::~ModuleFileExtensionReader() {}
+ModuleFileExtensionReader::~ModuleFileExtensionReader() = default;

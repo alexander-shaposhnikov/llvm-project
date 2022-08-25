@@ -209,7 +209,7 @@ protected:
         m_process = nullptr;
       }
 
-      InlinedIndexes() {}
+      InlinedIndexes() = default;
 
     private:
       uint64_t m_indexes = 0;
@@ -270,7 +270,7 @@ protected:
         m_count = 0;
       }
 
-      OutsourcedIndexes() {}
+      OutsourcedIndexes() = default;
 
       ValueObject *m_indexes = nullptr;
       size_t m_count = 0;
@@ -295,7 +295,7 @@ protected:
       m_mode = Mode::Invalid;
     }
 
-    Impl() {}
+    Impl() = default;
 
     Mode m_mode = Mode::Invalid;
   } m_impl;

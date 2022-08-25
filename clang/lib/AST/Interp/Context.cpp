@@ -24,7 +24,7 @@ using namespace clang::interp;
 
 Context::Context(ASTContext &Ctx) : Ctx(Ctx), P(new Program(*this)) {}
 
-Context::~Context() {}
+Context::~Context() = default;
 
 bool Context::isPotentialConstantExpr(State &Parent, const FunctionDecl *FD) {
   Function *Func = P->getFunction(FD);

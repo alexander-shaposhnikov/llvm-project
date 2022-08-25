@@ -27,8 +27,7 @@ public:
         m_byte_size(byte_size) {}
 
   UniqueDWARFASTType(const UniqueDWARFASTType &rhs)
-      : m_type_sp(rhs.m_type_sp), m_die(rhs.m_die),
-        m_declaration(rhs.m_declaration), m_byte_size(rhs.m_byte_size) {}
+       = default;
 
   ~UniqueDWARFASTType() = default;
 

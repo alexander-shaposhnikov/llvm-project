@@ -15,7 +15,7 @@
 using namespace clang;
 using namespace clang::interp;
 
-State::~State() {}
+State::~State() = default;
 
 OptionalDiagnostic State::FFDiag(SourceLocation Loc, diag::kind DiagId,
                                  unsigned ExtraNotes) {

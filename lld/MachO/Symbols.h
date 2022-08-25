@@ -41,7 +41,7 @@ public:
     LazyObjectKind,
   };
 
-  virtual ~Symbol() {}
+  virtual ~Symbol() = default;
 
   Kind kind() const { return symbolKind; }
 

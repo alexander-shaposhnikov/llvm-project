@@ -24,7 +24,7 @@ public:
       : m_pc(pc), m_cfa(cfa), m_symbol_scope(symbol_scope) {}
 
   StackID(const StackID &rhs)
-      : m_pc(rhs.m_pc), m_cfa(rhs.m_cfa), m_symbol_scope(rhs.m_symbol_scope) {}
+       = default;
 
   ~StackID() = default;
 

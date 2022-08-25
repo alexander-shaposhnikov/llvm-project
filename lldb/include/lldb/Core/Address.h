@@ -125,7 +125,7 @@ public:
   /// \param[in] rhs
   ///     A const Address object reference to copy.
   Address(const Address &rhs)
-      : m_section_wp(rhs.m_section_wp), m_offset(rhs.m_offset) {}
+       = default;
 
   /// Construct with a section pointer and offset.
   ///

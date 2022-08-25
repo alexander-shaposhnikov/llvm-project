@@ -1705,7 +1705,7 @@ namespace {
   };
 
   struct MemberPtr {
-    MemberPtr() {}
+    MemberPtr() = default;
     explicit MemberPtr(const ValueDecl *Decl)
         : DeclAndIsDerivedMember(Decl, false) {}
 

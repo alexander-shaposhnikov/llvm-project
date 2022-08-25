@@ -248,7 +248,7 @@ TemplateParameterListBuilder BuiltinTypeDeclBuilder::addTemplateArgumentList() {
 }
 } // namespace
 
-HLSLExternalSemaSource::~HLSLExternalSemaSource() {}
+HLSLExternalSemaSource::~HLSLExternalSemaSource() = default;
 
 void HLSLExternalSemaSource::InitializeSema(Sema &S) {
   SemaPtr = &S;

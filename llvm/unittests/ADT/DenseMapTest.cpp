@@ -334,7 +334,7 @@ namespace {
 struct CountCopyAndMove {
   static int Move;
   static int Copy;
-  CountCopyAndMove() {}
+  CountCopyAndMove() = default;
 
   CountCopyAndMove(const CountCopyAndMove &) { Copy++; }
   CountCopyAndMove &operator=(const CountCopyAndMove &) {

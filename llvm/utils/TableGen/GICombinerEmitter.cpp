@@ -604,7 +604,7 @@ class GICombinerEmitter {
 public:
   explicit GICombinerEmitter(RecordKeeper &RK, const CodeGenTarget &Target,
                              StringRef Name, Record *Combiner);
-  ~GICombinerEmitter() {}
+  ~GICombinerEmitter() = default;
 
   StringRef getClassName() const {
     return Combiner->getValueAsString("Classname");

@@ -134,7 +134,7 @@ private:
   using Elf_Sym = typename ELFT::Sym;
 
 public:
-  virtual ~ELFSectionWriter() {}
+  virtual ~ELFSectionWriter() = default;
   Error visit(const SymbolTableSection &Sec) override;
   Error visit(const RelocationSection &Sec) override;
   Error visit(const GnuDebugLinkSection &Sec) override;
@@ -177,7 +177,7 @@ public:
 
 class BinarySectionWriter : public SectionWriter {
 public:
-  virtual ~BinarySectionWriter() {}
+  virtual ~BinarySectionWriter() = default;
 
   Error visit(const SymbolTableSection &Sec) override;
   Error visit(const RelocationSection &Sec) override;
@@ -343,7 +343,7 @@ private:
   size_t totalSize() const;
 
 public:
-  virtual ~ELFWriter() {}
+  virtual ~ELFWriter() = default;
   bool WriteSectionHeaders;
 
   // For --only-keep-debug, select an alternative section/segment layout
@@ -362,7 +362,7 @@ private:
   uint64_t TotalSize = 0;
 
 public:
-  ~BinaryWriter() {}
+  ~BinaryWriter() = default;
   Error finalize() override;
   Error write() override;
   BinaryWriter(Object &Obj, raw_ostream &Out) : Writer(Obj, Out) {}
@@ -381,7 +381,7 @@ class IHexWriter : public Writer {
   uint64_t writeEndOfFileRecord(uint8_t *Buf);
 
 public:
-  ~IHexWriter() {}
+  ~IHexWriter() = default;
   Error finalize() override;
   Error write() override;
   IHexWriter(Object &Obj, raw_ostream &Out) : Writer(Obj, Out) {}
@@ -654,7 +654,7 @@ private:
   SymbolTableSection *Symbols = nullptr;
 
 public:
-  virtual ~SectionIndexSection() {}
+  virtual ~SectionIndexSection() = default;
   void addIndex(uint32_t Index) {
     assert(Size > 0);
     Indexes.push_back(Index);

@@ -25,7 +25,7 @@ public:
                     raw_pwrite_stream &OS)
       : W(OS, support::little), TargetObjectWriter(std::move(MOTW)) {}
 
-  ~SPIRVObjectWriter() override {}
+  ~SPIRVObjectWriter() override = default;
 
 private:
   void recordRelocation(MCAssembler &Asm, const MCAsmLayout &Layout,

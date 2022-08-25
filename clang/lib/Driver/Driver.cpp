@@ -2720,7 +2720,7 @@ class OffloadingActionBuilder final {
                         Action::OffloadKind AssociatedOffloadKind)
         : C(C), Args(Args), Inputs(Inputs),
           AssociatedOffloadKind(AssociatedOffloadKind) {}
-    virtual ~DeviceActionBuilder() {}
+    virtual ~DeviceActionBuilder() = default;
 
     /// Fill up the array \a DA with all the device dependences that should be
     /// added to the provided host action \a HostAction. By default it is

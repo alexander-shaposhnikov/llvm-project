@@ -634,7 +634,7 @@ uint32_t Host::FindProcesses(const ProcessInstanceInfoMatch &match_info,
 
 char SystemLogHandler::ID;
 
-SystemLogHandler::SystemLogHandler() {}
+SystemLogHandler::SystemLogHandler() = default;
 
 void SystemLogHandler::Emit(llvm::StringRef message) {
   Host::SystemLog(message);

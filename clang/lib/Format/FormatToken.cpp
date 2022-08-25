@@ -89,7 +89,7 @@ bool FormatToken::opensBlockOrBlockTypeList(const FormatStyle &Style) const {
                             Style.Language == FormatStyle::LK_TextProto));
 }
 
-TokenRole::~TokenRole() {}
+TokenRole::~TokenRole() = default;
 
 void TokenRole::precomputeFormattingInfos(const FormatToken *Token) {}
 

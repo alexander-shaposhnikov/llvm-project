@@ -158,7 +158,7 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : Triple(T) {
 }
 
 // Out of line virtual dtor for TargetInfo.
-TargetInfo::~TargetInfo() {}
+TargetInfo::~TargetInfo() = default;
 
 void TargetInfo::resetDataLayout(StringRef DL, const char *ULP) {
   DataLayoutString = DL.str();

@@ -2797,7 +2797,7 @@ Generic_GCC::Generic_GCC(const Driver &D, const llvm::Triple &Triple,
     getProgramPaths().push_back(getDriver().Dir);
 }
 
-Generic_GCC::~Generic_GCC() {}
+Generic_GCC::~Generic_GCC() = default;
 
 Tool *Generic_GCC::getTool(Action::ActionClass AC) const {
   switch (AC) {

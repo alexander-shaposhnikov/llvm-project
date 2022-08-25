@@ -34,7 +34,7 @@ struct RefactoringDescriptor {
 /// partially).
 class RefactoringActionRuleBase {
 public:
-  virtual ~RefactoringActionRuleBase() {}
+  virtual ~RefactoringActionRuleBase() = default;
 
   /// Initiates and performs a specific refactoring action.
   ///

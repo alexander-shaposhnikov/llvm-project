@@ -318,7 +318,7 @@ private:
   bool SearchNamespaces;
 };
 
-inline Sema::TypoExprState::TypoExprState() {}
+inline Sema::TypoExprState::TypoExprState() = default;
 
 inline Sema::TypoExprState::TypoExprState(TypoExprState &&other) noexcept {
   *this = std::move(other);

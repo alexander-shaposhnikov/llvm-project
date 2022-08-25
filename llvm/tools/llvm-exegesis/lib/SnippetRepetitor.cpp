@@ -113,7 +113,7 @@ private:
 
 } // namespace
 
-SnippetRepetitor::~SnippetRepetitor() {}
+SnippetRepetitor::~SnippetRepetitor() = default;
 
 std::unique_ptr<const SnippetRepetitor>
 SnippetRepetitor::Create(InstructionBenchmark::RepetitionModeE Mode,

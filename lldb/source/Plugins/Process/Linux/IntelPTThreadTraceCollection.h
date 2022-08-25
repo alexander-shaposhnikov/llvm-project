@@ -17,7 +17,7 @@ namespace process_linux {
 /// Manages a list of thread traces.
 class IntelPTThreadTraceCollection {
 public:
-  IntelPTThreadTraceCollection() {}
+  IntelPTThreadTraceCollection() = default;
 
   /// Dispose of all traces
   void Clear();

@@ -23,7 +23,7 @@ struct XCOFFConfig;
 
 class MultiFormatConfig {
 public:
-  virtual ~MultiFormatConfig() {}
+  virtual ~MultiFormatConfig() = default;
 
   virtual const CommonConfig &getCommonConfig() const = 0;
   virtual Expected<const ELFConfig &> getELFConfig() const = 0;

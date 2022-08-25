@@ -2255,7 +2255,7 @@ VTableLayout::VTableLayout(ArrayRef<size_t> VTableIndices,
   });
 }
 
-VTableLayout::~VTableLayout() { }
+VTableLayout::~VTableLayout() = default;
 
 bool VTableContextBase::hasVtableSlot(const CXXMethodDecl *MD) {
   return MD->isVirtual() && !MD->isConsteval();
@@ -2265,7 +2265,7 @@ ItaniumVTableContext::ItaniumVTableContext(
     ASTContext &Context, VTableComponentLayout ComponentLayout)
     : VTableContextBase(/*MS=*/false), ComponentLayout(ComponentLayout) {}
 
-ItaniumVTableContext::~ItaniumVTableContext() {}
+ItaniumVTableContext::~ItaniumVTableContext() = default;
 
 uint64_t ItaniumVTableContext::getMethodVTableIndex(GlobalDecl GD) {
   GD = GD.getCanonicalDecl();
@@ -3409,7 +3409,7 @@ static bool rebucketPaths(VPtrInfoVector &Paths) {
   return Changed;
 }
 
-MicrosoftVTableContext::~MicrosoftVTableContext() {}
+MicrosoftVTableContext::~MicrosoftVTableContext() = default;
 
 namespace {
 typedef llvm::SetVector<BaseSubobject, std::vector<BaseSubobject>,

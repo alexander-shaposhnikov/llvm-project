@@ -584,7 +584,7 @@ private:
 ASTNameGenerator::ASTNameGenerator(ASTContext &Ctx)
     : Impl(std::make_unique<Implementation>(Ctx)) {}
 
-ASTNameGenerator::~ASTNameGenerator() {}
+ASTNameGenerator::~ASTNameGenerator() = default;
 
 bool ASTNameGenerator::writeName(const Decl *D, raw_ostream &OS) {
   return Impl->writeName(D, OS);

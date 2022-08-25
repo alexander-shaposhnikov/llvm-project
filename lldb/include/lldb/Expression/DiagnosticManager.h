@@ -61,8 +61,7 @@ public:
         m_compiler_id(compiler_id) {}
 
   Diagnostic(const Diagnostic &rhs)
-      : m_message(rhs.m_message), m_severity(rhs.m_severity),
-        m_origin(rhs.m_origin), m_compiler_id(rhs.m_compiler_id) {}
+       = default;
 
   virtual ~Diagnostic() = default;
 

@@ -46,7 +46,7 @@ class ChrootChecker : public Checker<eval::Call, check::PreCall> {
   const CallDescription Chroot{"chroot", 1}, Chdir{"chdir", 1};
 
 public:
-  ChrootChecker() {}
+  ChrootChecker() = default;
 
   static void *getTag() {
     static int x;

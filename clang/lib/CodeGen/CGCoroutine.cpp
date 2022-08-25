@@ -83,8 +83,8 @@ struct clang::CodeGen::CGCoroData {
 };
 
 // Defining these here allows to keep CGCoroData private to this file.
-clang::CodeGen::CodeGenFunction::CGCoroInfo::CGCoroInfo() {}
-CodeGenFunction::CGCoroInfo::~CGCoroInfo() {}
+clang::CodeGen::CodeGenFunction::CGCoroInfo::CGCoroInfo() = default;
+CodeGenFunction::CGCoroInfo::~CGCoroInfo() = default;
 
 static void createCoroData(CodeGenFunction &CGF,
                            CodeGenFunction::CGCoroInfo &CurCoro,
@@ -322,7 +322,7 @@ namespace {
 struct GetParamRef : public StmtVisitor<GetParamRef> {
 public:
   DeclRefExpr *Expr = nullptr;
-  GetParamRef() {}
+  GetParamRef() = default;
   void VisitDeclRefExpr(DeclRefExpr *E) {
     assert(Expr == nullptr && "multilple declref in param move");
     Expr = E;

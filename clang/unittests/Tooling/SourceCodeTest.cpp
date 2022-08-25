@@ -416,7 +416,7 @@ TEST(SourceCodeTest, getAssociatedRangeWithComments) {
 
 TEST(SourceCodeTest, getAssociatedRangeInvalidForPartialExpansions) {
   struct FailingVarDeclsVisitor : TestVisitor<FailingVarDeclsVisitor> {
-    FailingVarDeclsVisitor() {}
+    FailingVarDeclsVisitor() = default;
     bool VisitVarDecl(VarDecl *Decl) {
       EXPECT_TRUE(getAssociatedRange(*Decl, *Context).isInvalid());
       return true;

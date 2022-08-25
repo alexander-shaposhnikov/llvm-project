@@ -149,9 +149,9 @@ public:
     StringRef BundleID;
   };
 
-  FileHandler() {}
+  FileHandler() = default;
 
-  virtual ~FileHandler() {}
+  virtual ~FileHandler() = default;
 
   /// Update the file handler with information from the header of the bundled
   /// file.
@@ -281,7 +281,7 @@ class BinaryFileHandler final : public FileHandler {
     /// Offset at which the bundle starts in the bundled file.
     uint64_t Offset = 0u;
 
-    BinaryBundleInfo() {}
+    BinaryBundleInfo() = default;
     BinaryBundleInfo(uint64_t Size, uint64_t Offset)
         : Size(Size), Offset(Offset) {}
   };
@@ -303,7 +303,7 @@ public:
   // TODO: Add error checking from ClangOffloadBundler.cpp
   BinaryFileHandler(const OffloadBundlerConfig &BC) : BundlerConfig(BC) {}
 
-  ~BinaryFileHandler() final {}
+  ~BinaryFileHandler() final = default;
 
   Error ReadHeader(MemoryBuffer &Input) final {
     StringRef FC = Input.getBuffer();
@@ -530,7 +530,7 @@ public:
       : Obj(std::move(ObjIn)), CurrentSection(Obj->section_begin()),
         NextSection(Obj->section_begin()), BundlerConfig(BC) {}
 
-  ~ObjectFileHandler() final {}
+  ~ObjectFileHandler() final = default;
 
   Error ReadHeader(MemoryBuffer &Input) final { return Error::success(); }
 

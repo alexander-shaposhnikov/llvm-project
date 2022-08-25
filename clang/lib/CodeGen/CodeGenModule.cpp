@@ -227,7 +227,7 @@ CodeGenModule::CodeGenModule(ASTContext &C,
   }
 }
 
-CodeGenModule::~CodeGenModule() {}
+CodeGenModule::~CodeGenModule() = default;
 
 void CodeGenModule::createObjCRuntime() {
   // This is just isGNUFamily(), but we want to force implementors of

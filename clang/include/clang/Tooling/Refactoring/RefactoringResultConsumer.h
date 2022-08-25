@@ -23,7 +23,7 @@ namespace tooling {
 /// A valid refactoring result must be handled by a \c handle method.
 class RefactoringResultConsumer {
 public:
-  virtual ~RefactoringResultConsumer() {}
+  virtual ~RefactoringResultConsumer() = default;
 
   /// Handles an initiation or an invication error. An initiation error typically
   /// has a \c DiagnosticError payload that describes why initiation failed.

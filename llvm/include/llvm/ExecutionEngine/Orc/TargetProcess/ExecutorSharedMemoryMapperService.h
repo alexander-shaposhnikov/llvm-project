@@ -27,7 +27,7 @@ namespace rt_bootstrap {
 class ExecutorSharedMemoryMapperService final
     : public ExecutorBootstrapService {
 public:
-  ~ExecutorSharedMemoryMapperService(){};
+  ~ExecutorSharedMemoryMapperService()= default;;
 
   Expected<std::pair<ExecutorAddr, std::string>> reserve(uint64_t Size);
   Expected<ExecutorAddr> initialize(ExecutorAddr Reservation,

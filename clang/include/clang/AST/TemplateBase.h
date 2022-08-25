@@ -421,7 +421,7 @@ private:
   }
 
 public:
-  TemplateArgumentLocInfo() {}
+  TemplateArgumentLocInfo() = default;
   TemplateArgumentLocInfo(TypeSourceInfo *Declarator) { Pointer = Declarator; }
 
   TemplateArgumentLocInfo(Expr *E) { Pointer = E; }
@@ -459,7 +459,7 @@ class TemplateArgumentLoc {
   TemplateArgumentLocInfo LocInfo;
 
 public:
-  TemplateArgumentLoc() {}
+  TemplateArgumentLoc() = default;
 
   TemplateArgumentLoc(const TemplateArgument &Argument,
                       TemplateArgumentLocInfo Opaque)

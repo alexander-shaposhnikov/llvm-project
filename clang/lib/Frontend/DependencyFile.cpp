@@ -173,7 +173,7 @@ bool DependencyCollector::sawDependency(StringRef Filename, bool FromModule,
          (needSystemDependencies() || !IsSystem);
 }
 
-DependencyCollector::~DependencyCollector() { }
+DependencyCollector::~DependencyCollector() = default;
 void DependencyCollector::attachToPreprocessor(Preprocessor &PP) {
   PP.addPPCallbacks(std::make_unique<DepCollectorPPCallbacks>(*this, PP));
   PP.getHeaderSearchInfo().getModuleMap().addModuleMapCallbacks(

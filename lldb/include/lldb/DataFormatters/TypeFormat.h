@@ -25,9 +25,9 @@ class TypeFormatImpl {
 public:
   class Flags {
   public:
-    Flags() {}
+    Flags() = default;
 
-    Flags(const Flags &other) : m_flags(other.m_flags) {}
+    Flags(const Flags &other)  = default;
 
     Flags(uint32_t value) : m_flags(value) {}
 

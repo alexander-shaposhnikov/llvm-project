@@ -300,7 +300,7 @@ bool ento::shouldRegisterConfigDumper(const CheckerManager &mgr) {
 namespace {
 class ExplodedGraphViewer : public Checker< check::EndAnalysis > {
 public:
-  ExplodedGraphViewer() {}
+  ExplodedGraphViewer() = default;
   void checkEndAnalysis(ExplodedGraph &G, BugReporter &B,ExprEngine &Eng) const {
     Eng.ViewGraph(false);
   }

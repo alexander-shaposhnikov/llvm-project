@@ -390,7 +390,7 @@ class ObjCSummaryCache {
   typedef llvm::DenseMap<ObjCSummaryKey, const RetainSummary *> MapTy;
   MapTy M;
 public:
-  ObjCSummaryCache() {}
+  ObjCSummaryCache() = default;
 
   const RetainSummary * find(const ObjCInterfaceDecl *D, Selector S) {
     // Do a lookup with the (D,S) pair.  If we find a match return

@@ -33,7 +33,7 @@ public:
 };
 }
 
-CXXSelfAssignmentChecker::CXXSelfAssignmentChecker() {}
+CXXSelfAssignmentChecker::CXXSelfAssignmentChecker() = default;
 
 void CXXSelfAssignmentChecker::checkBeginFunction(CheckerContext &C) const {
   if (!C.inTopFrame())

@@ -4029,4 +4029,4 @@ void CodeGenModule::emitAtAvailableLinkGuard() {
   }
 }
 
-CGObjCRuntime::~CGObjCRuntime() {}
+CGObjCRuntime::~CGObjCRuntime() = default;

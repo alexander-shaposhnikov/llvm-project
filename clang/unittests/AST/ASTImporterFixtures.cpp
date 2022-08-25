@@ -60,7 +60,7 @@ ASTImporterTestBase::TU::TU(StringRef Code, StringRef FileName,
     };
 }
 
-ASTImporterTestBase::TU::~TU() {}
+ASTImporterTestBase::TU::~TU() = default;
 
 void ASTImporterTestBase::TU::lazyInitImporter(
     const std::shared_ptr<ASTImporterSharedState> &SharedState,

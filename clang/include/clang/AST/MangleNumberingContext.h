@@ -28,7 +28,7 @@ class VarDecl;
 /// literals within a particular context.
 class MangleNumberingContext {
 public:
-  virtual ~MangleNumberingContext() {}
+  virtual ~MangleNumberingContext() = default;
 
   /// Retrieve the mangling number of a new lambda expression with the
   /// given call operator within this context.

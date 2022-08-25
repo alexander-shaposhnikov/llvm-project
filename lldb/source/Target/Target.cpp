@@ -3937,7 +3937,7 @@ class TargetExperimentalOptionValueProperties
                        OptionValueProperties> {
 public:
   TargetExperimentalOptionValueProperties()
-      : Cloneable(ConstString(Properties::GetExperimentalSettingsName())) {}
+      : Cloneable(ConstString(Properties::GetExperimentalSettingsName())) = default;
 };
 
 TargetExperimentalProperties::TargetExperimentalProperties()

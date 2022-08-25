@@ -1573,7 +1573,7 @@ namespace {
 
   /// Call the operator delete associated with the current destructor.
   struct CallDtorDelete final : EHScopeStack::Cleanup {
-    CallDtorDelete() {}
+    CallDtorDelete() = default;
 
     void Emit(CodeGenFunction &CGF, Flags flags) override {
       const CXXDestructorDecl *Dtor = cast<CXXDestructorDecl>(CGF.CurCodeDecl);

@@ -46,7 +46,7 @@ public:
                   bool ShouldDisplayPathNotes)
       : DiagOpts(std::move(DiagOpts)), DiagEng(DiagEng), LO(LO),
         ShouldDisplayPathNotes(ShouldDisplayPathNotes) {}
-  ~TextDiagnostics() override {}
+  ~TextDiagnostics() override = default;
 
   StringRef getName() const override { return "TextDiagnostics"; }
 

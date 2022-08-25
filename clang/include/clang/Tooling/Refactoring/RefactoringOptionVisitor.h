@@ -24,7 +24,7 @@ class RefactoringOption;
 /// declaration in this interface.
 class RefactoringOptionVisitor {
 public:
-  virtual ~RefactoringOptionVisitor() {}
+  virtual ~RefactoringOptionVisitor() = default;
 
   virtual void visit(const RefactoringOption &Opt,
                      Optional<std::string> &Value) = 0;

@@ -34,7 +34,7 @@ namespace {
 class AbbreviationMap {
   llvm::DenseMap<unsigned, unsigned> Abbrevs;
 public:
-  AbbreviationMap() {}
+  AbbreviationMap() = default;
 
   void set(unsigned recordID, unsigned abbrevID) {
     assert(Abbrevs.find(recordID) == Abbrevs.end()
@@ -62,7 +62,7 @@ public:
                  DiagnosticOptions *DiagOpts)
     : DiagnosticNoteRenderer(LangOpts, DiagOpts), Writer(Writer) {}
 
-  ~SDiagsRenderer() override {}
+  ~SDiagsRenderer() override = default;
 
 protected:
   void emitDiagnosticMessage(FullSourceLoc Loc, PresumedLoc PLoc,
@@ -151,7 +151,7 @@ public:
     EmitPreamble();
   }
 
-  ~SDiagsWriter() override {}
+  ~SDiagsWriter() override = default;
 
   void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                         const Diagnostic &Info) override;

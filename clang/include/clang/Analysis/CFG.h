@@ -315,7 +315,7 @@ private:
 /// by the compiler on encountering a CompoundStmt
 class CFGScopeBegin : public CFGElement {
 public:
-  CFGScopeBegin() {}
+  CFGScopeBegin() = default;
   CFGScopeBegin(const VarDecl *VD, const Stmt *S)
       : CFGElement(ScopeBegin, VD, S) {}
 
@@ -341,7 +341,7 @@ private:
 /// the compiler after the last Stmt in a CompoundStmt's body
 class CFGScopeEnd : public CFGElement {
 public:
-  CFGScopeEnd() {}
+  CFGScopeEnd() = default;
   CFGScopeEnd(const VarDecl *VD, const Stmt *S) : CFGElement(ScopeEnd, VD, S) {}
 
   const VarDecl *getVarDecl() const {

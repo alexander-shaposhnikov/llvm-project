@@ -151,10 +151,8 @@ public:
         SetHelp(help);
   };
   
-  BreakpointName(const BreakpointName &rhs) :
-      m_name(rhs.m_name), m_options(rhs.m_options),
-      m_permissions(rhs.m_permissions), m_help(rhs.m_help)
-  {}
+  BreakpointName(const BreakpointName &rhs)  
+  = default;
   
   BreakpointName(ConstString name, const Breakpoint &bkpt,
                  const char *help);

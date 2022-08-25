@@ -1022,9 +1022,9 @@ VersionTuple MachO::getLinkerVersion(const llvm::opt::ArgList &Args) const {
   return *LinkerVersion;
 }
 
-Darwin::~Darwin() {}
+Darwin::~Darwin() = default;
 
-MachO::~MachO() {}
+MachO::~MachO() = default;
 
 std::string Darwin::ComputeEffectiveClangTriple(const ArgList &Args,
                                                 types::ID InputType) const {

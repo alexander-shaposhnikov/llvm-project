@@ -49,7 +49,7 @@ class ODRHash {
   llvm::FoldingSetNodeID ID;
 
 public:
-  ODRHash() {}
+  ODRHash() = default;
 
   // Use this for ODR checking classes between modules.  This method compares
   // more information than the AddDecl class.

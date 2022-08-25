@@ -20,7 +20,7 @@ using namespace clang;
 ZOS::ZOS(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     : ToolChain(D, Triple, Args) {}
 
-ZOS::~ZOS() {}
+ZOS::~ZOS() = default;
 
 void ZOS::addClangTargetOptions(const ArgList &DriverArgs,
                                 ArgStringList &CC1Args,

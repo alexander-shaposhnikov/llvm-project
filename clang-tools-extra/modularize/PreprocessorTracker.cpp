@@ -482,8 +482,8 @@ public:
   PPItemKey(StringHandle Name, HeaderHandle File, int Line, int Column)
       : Name(Name), File(File), Line(Line), Column(Column) {}
   PPItemKey(const PPItemKey &Other)
-      : Name(Other.Name), File(Other.File), Line(Other.Line),
-        Column(Other.Column) {}
+      
+        = default;
   PPItemKey() : File(HeaderHandleInvalid), Line(0), Column(0) {}
   bool operator==(const PPItemKey &Other) const {
     if (Name != Other.Name)
@@ -520,8 +520,8 @@ class HeaderInclusionPath {
 public:
   HeaderInclusionPath(std::vector<HeaderHandle> HeaderInclusionPath)
       : Path(HeaderInclusionPath) {}
-  HeaderInclusionPath(const HeaderInclusionPath &Other) : Path(Other.Path) {}
-  HeaderInclusionPath() {}
+  HeaderInclusionPath(const HeaderInclusionPath &Other)  = default;
+  HeaderInclusionPath() = default;
   std::vector<HeaderHandle> Path;
 };
 
@@ -540,7 +540,7 @@ public:
         DefinitionSourceLine(DefinitionSourceLine) {
     InclusionPathHandles.push_back(H);
   }
-  MacroExpansionInstance() {}
+  MacroExpansionInstance() = default;
 
   // Check for the presence of a header inclusion path handle entry.
   // Return false if not found.
@@ -587,7 +587,7 @@ public:
     addMacroExpansionInstance(MacroExpanded, DefinitionLocation,
                               DefinitionSourceLine, InclusionPathHandle);
   }
-  MacroExpansionTracker() {}
+  MacroExpansionTracker() = default;
 
   // Find a matching macro expansion instance.
   MacroExpansionInstance *
@@ -638,7 +638,7 @@ public:
       : ConditionValue(ConditionValue) {
     InclusionPathHandles.push_back(H);
   }
-  ConditionalExpansionInstance() {}
+  ConditionalExpansionInstance() = default;
 
   // Check for the presence of a header inclusion path handle entry.
   // Return false if not found.
@@ -678,7 +678,7 @@ public:
       : DirectiveKind(DirectiveKind), ConditionUnexpanded(ConditionUnexpanded) {
     addConditionalExpansionInstance(ConditionValue, InclusionPathHandle);
   }
-  ConditionalTracker() {}
+  ConditionalTracker() = default;
 
   // Find a matching condition expansion instance.
   ConditionalExpansionInstance *
@@ -727,7 +727,7 @@ public:
   PreprocessorCallbacks(PreprocessorTrackerImpl &ppTracker,
                         clang::Preprocessor &PP, llvm::StringRef rootHeaderFile)
       : PPTracker(ppTracker), PP(PP), RootHeaderFile(rootHeaderFile) {}
-  ~PreprocessorCallbacks() override {}
+  ~PreprocessorCallbacks() override = default;
 
   // Overridden handlers.
   void InclusionDirective(clang::SourceLocation HashLoc,
@@ -794,7 +794,7 @@ public:
     }
   }
 
-  ~PreprocessorTrackerImpl() override {}
+  ~PreprocessorTrackerImpl() override = default;
 
   // Handle entering a preprocessing session.
   void handlePreprocessorEntry(clang::Preprocessor &PP,
@@ -1262,7 +1262,7 @@ private:
 // PreprocessorTracker functions.
 
 // PreprocessorTracker destructor.
-PreprocessorTracker::~PreprocessorTracker() {}
+PreprocessorTracker::~PreprocessorTracker() = default;
 
 // Create instance of PreprocessorTracker.
 PreprocessorTracker *PreprocessorTracker::create(

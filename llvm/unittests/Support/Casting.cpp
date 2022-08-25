@@ -23,7 +23,7 @@ template <typename T> IllegalCast *cast(...) { return nullptr; }
 // with conversion facility
 //
 struct bar {
-  bar() {}
+  bar() = default;
   struct foo *baz();
   struct foo *caz();
   struct foo *daz();
@@ -38,7 +38,7 @@ struct foo {
 };
 
 struct base {
-  virtual ~base() {}
+  virtual ~base() = default;
 };
 
 struct derived : public base {
@@ -346,12 +346,12 @@ namespace inferred_upcasting {
 class Base {
 public:
   // No classof. We are testing that the upcast is inferred.
-  Base() {}
+  Base() = default;
 };
 
 class Derived : public Base {
 public:
-  Derived() {}
+  Derived() = default;
 };
 
 // Even with no explicit classof() in Base, we should still be able to cast
@@ -500,7 +500,7 @@ TEST(CastingTest, smart_dyn_cast_or_null) {
 #ifndef NDEBUG
 namespace assertion_checks {
 struct Base {
-  virtual ~Base() {}
+  virtual ~Base() = default;
 };
 
 struct Derived : public Base {

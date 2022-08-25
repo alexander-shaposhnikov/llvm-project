@@ -1394,7 +1394,7 @@ public:
     llvm::PointerIntPair<CXXMethodDecl *, 2> Pair;
 
   public:
-    SpecialMemberOverloadResult() {}
+    SpecialMemberOverloadResult() = default;
     SpecialMemberOverloadResult(CXXMethodDecl *MD)
         : Pair(MD, MD->isDeleted() ? NoMemberOrDeleted : Success) {}
 
@@ -2133,10 +2133,10 @@ public:
 
   /// Abstract class used to diagnose incomplete types.
   struct TypeDiagnoser {
-    TypeDiagnoser() {}
+    TypeDiagnoser() = default;
 
     virtual void diagnose(Sema &S, SourceLocation Loc, QualType T) = 0;
-    virtual ~TypeDiagnoser() {}
+    virtual ~TypeDiagnoser() = default;
   };
 
   static int getPrintable(int I) { return I; }
@@ -3801,7 +3801,7 @@ public:
     virtual SemaDiagnosticBuilder diagnoseConversion(
         Sema &S, SourceLocation Loc, QualType T, QualType ConvTy) = 0;
 
-    virtual ~ContextualImplicitConverter() {}
+    virtual ~ContextualImplicitConverter() = default;
   };
 
   class ICEConvertDiagnoser : public ContextualImplicitConverter {
@@ -12540,7 +12540,7 @@ public:
     virtual SemaDiagnosticBuilder diagnoseNotICE(Sema &S,
                                                  SourceLocation Loc) = 0;
     virtual SemaDiagnosticBuilder diagnoseFold(Sema &S, SourceLocation Loc);
-    virtual ~VerifyICEDiagnoser() {}
+    virtual ~VerifyICEDiagnoser() = default;
   };
 
   enum AllowFoldKind {
@@ -13296,7 +13296,7 @@ public:
                                   bool LayoutCompatible, bool MustBeNull);
 
   struct TypeTagData {
-    TypeTagData() {}
+    TypeTagData() = default;
 
     TypeTagData(QualType Type, bool LayoutCompatible, bool MustBeNull) :
         Type(Type), LayoutCompatible(LayoutCompatible),

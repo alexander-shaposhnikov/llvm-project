@@ -59,7 +59,7 @@ public:
   TypeErasedDataflowAnalysis(DataflowAnalysisOptions Options)
       : Options(Options) {}
 
-  virtual ~TypeErasedDataflowAnalysis() {}
+  virtual ~TypeErasedDataflowAnalysis() = default;
 
   /// Returns the `ASTContext` that is used by the analysis.
   virtual ASTContext &getASTContext() = 0;

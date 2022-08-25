@@ -57,7 +57,7 @@ namespace {
                      const MacroExpansionContext &MacroExpansions,
                      bool supportsMultipleFiles);
 
-    ~PlistDiagnostics() override {}
+    ~PlistDiagnostics() override = default;
 
     void FlushDiagnosticsImpl(std::vector<const PathDiagnostic *> &Diags,
                               FilesMade *filesMade) override;

@@ -11,4 +11,4 @@
 using namespace clang;
 using namespace clang::interp;
 
-Frame::~Frame() {}
+Frame::~Frame() = default;

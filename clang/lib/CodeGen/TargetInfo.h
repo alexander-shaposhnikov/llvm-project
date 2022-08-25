@@ -317,8 +317,8 @@ public:
   class TargetOpenCLBlockHelper {
   public:
     typedef std::pair<llvm::Value *, StringRef> ValueTy;
-    TargetOpenCLBlockHelper() {}
-    virtual ~TargetOpenCLBlockHelper() {}
+    TargetOpenCLBlockHelper() = default;
+    virtual ~TargetOpenCLBlockHelper() = default;
     /// Get the custom field types for OpenCL blocks.
     virtual llvm::SmallVector<llvm::Type *, 1> getCustomFieldTypes() = 0;
     /// Get the custom field values for OpenCL blocks.

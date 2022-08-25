@@ -37,8 +37,7 @@ CodeGenTBAA::CodeGenTBAA(ASTContext &Ctx, llvm::Module &M,
     Root(nullptr), Char(nullptr)
 {}
 
-CodeGenTBAA::~CodeGenTBAA() {
-}
+CodeGenTBAA::~CodeGenTBAA() = default;
 
 llvm::MDNode *CodeGenTBAA::getRoot() {
   // Define the root of the tree. This identifies the tree, so that

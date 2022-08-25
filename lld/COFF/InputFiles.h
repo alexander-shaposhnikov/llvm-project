@@ -73,7 +73,7 @@ public:
     DLLKind
   };
   Kind kind() const { return fileKind; }
-  virtual ~InputFile() {}
+  virtual ~InputFile() = default;
 
   // Returns the filename.
   StringRef getName() const { return mb.getBufferIdentifier(); }

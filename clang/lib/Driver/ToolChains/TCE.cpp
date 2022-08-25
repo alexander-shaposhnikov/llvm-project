@@ -28,7 +28,7 @@ TCEToolChain::TCEToolChain(const Driver &D, const llvm::Triple &Triple,
   getProgramPaths().push_back(Path);
 }
 
-TCEToolChain::~TCEToolChain() {}
+TCEToolChain::~TCEToolChain() = default;
 
 bool TCEToolChain::IsMathErrnoDefault() const { return true; }
 
@@ -45,4 +45,4 @@ TCELEToolChain::TCELEToolChain(const Driver &D, const llvm::Triple& Triple,
   : TCEToolChain(D, Triple, Args) {
 }
 
-TCELEToolChain::~TCELEToolChain() {}
+TCELEToolChain::~TCELEToolChain() = default;

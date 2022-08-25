@@ -41,7 +41,7 @@ class SuperRegionLivenessConsumer : public ExprEngineConsumer {
 
 public:
   SuperRegionLivenessConsumer(CompilerInstance &C) : ExprEngineConsumer(C) {}
-  ~SuperRegionLivenessConsumer() override {}
+  ~SuperRegionLivenessConsumer() override = default;
 
   bool HandleTopLevelDecl(DeclGroupRef DG) override {
     for (const auto *D : DG)
@@ -52,7 +52,7 @@ public:
 
 class SuperRegionLivenessAction : public ASTFrontendAction {
 public:
-  SuperRegionLivenessAction() {}
+  SuperRegionLivenessAction() = default;
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &Compiler,
                                                  StringRef File) override {
     return std::make_unique<SuperRegionLivenessConsumer>(Compiler);

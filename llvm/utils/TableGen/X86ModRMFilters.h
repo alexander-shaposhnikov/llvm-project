@@ -29,7 +29,7 @@ class ModRMFilter {
   virtual void anchor();
 public:
   /// Destructor    - Override as necessary.
-  virtual ~ModRMFilter() { }
+  virtual ~ModRMFilter() = default;
 
   /// isDumb        - Indicates whether this filter returns the same value for
   ///                 any value of the ModR/M byte.

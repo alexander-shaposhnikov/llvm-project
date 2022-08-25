@@ -13925,8 +13925,8 @@ protected:
   }
 
 public:
-  ExprBuilder() {}
-  virtual ~ExprBuilder() {}
+  ExprBuilder() = default;
+  virtual ~ExprBuilder() = default;
 
   virtual Expr *build(Sema &S, SourceLocation Loc) const = 0;
 };

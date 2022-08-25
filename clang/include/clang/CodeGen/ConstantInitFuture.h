@@ -53,7 +53,7 @@ class ConstantInitFuture {
   explicit ConstantInitFuture(ConstantInitBuilderBase *builder);
 
 public:
-  ConstantInitFuture() {}
+  ConstantInitFuture() = default;
 
   /// A future can be explicitly created from a fixed initializer.
   explicit ConstantInitFuture(llvm::Constant *initializer) : Data(initializer) {

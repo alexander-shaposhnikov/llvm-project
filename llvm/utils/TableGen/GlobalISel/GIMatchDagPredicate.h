@@ -55,7 +55,7 @@ public:
   GIMatchDagPredicate(GIMatchDagPredicateKind Kind, StringRef Name,
                       const GIMatchDagOperandList &OperandInfo)
       : Kind(Kind), Name(Name), OperandInfo(OperandInfo) {}
-  virtual ~GIMatchDagPredicate() {}
+  virtual ~GIMatchDagPredicate() = default;
 
   GIMatchDagPredicateKind getKind() const { return Kind; }
 

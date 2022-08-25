@@ -8811,7 +8811,7 @@ struct OMPTraitSet {
 /// and an ordered collection of properties.
 class OMPTraitInfo {
   /// Private constructor accesible only by ASTContext.
-  OMPTraitInfo() {}
+  OMPTraitInfo() = default;
   friend class ASTContext;
 
 public:

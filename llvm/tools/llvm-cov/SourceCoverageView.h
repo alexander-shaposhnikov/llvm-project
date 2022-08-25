@@ -116,7 +116,7 @@ public:
   static std::unique_ptr<CoveragePrinter>
   create(const CoverageViewOptions &Opts);
 
-  virtual ~CoveragePrinter() {}
+  virtual ~CoveragePrinter() = default;
 
   /// @name File Creation Interface
   /// @{
@@ -264,7 +264,7 @@ public:
   create(StringRef SourceName, const MemoryBuffer &File,
          const CoverageViewOptions &Options, CoverageData &&CoverageInfo);
 
-  virtual ~SourceCoverageView() {}
+  virtual ~SourceCoverageView() = default;
 
   /// Return the source name formatted for the host OS.
   std::string getSourceName() const;

@@ -481,7 +481,7 @@ struct Piece {
   Piece(PieceKind Kind) : ClassKind(Kind) {}
   Piece(Piece const &O) = delete;
   Piece &operator=(Piece const &) = delete;
-  virtual ~Piece() {}
+  virtual ~Piece() = default;
 
   PieceKind getPieceClass() const { return ClassKind; }
   static bool classof(const Piece *) { return true; }
@@ -1617,7 +1617,7 @@ void clang::EmitClangDiagGroups(RecordKeeper &Records, raw_ostream &OS) {
 namespace {
 struct RecordIndexElement
 {
-  RecordIndexElement() {}
+  RecordIndexElement() = default;
   explicit RecordIndexElement(Record const &R)
       : Name(std::string(R.getName())) {}
 

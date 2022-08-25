@@ -17,7 +17,7 @@ using namespace clang::serialization;
 
 char TestModuleFileExtension::ID = 0;
 
-TestModuleFileExtension::Writer::~Writer() { }
+TestModuleFileExtension::Writer::~Writer() = default;
 
 void TestModuleFileExtension::Writer::writeExtensionContents(
        Sema &SemaRef,
@@ -84,9 +84,9 @@ TestModuleFileExtension::Reader::Reader(ModuleFileExtension *Ext,
   }
 }
 
-TestModuleFileExtension::Reader::~Reader() { }
+TestModuleFileExtension::Reader::~Reader() = default;
 
-TestModuleFileExtension::~TestModuleFileExtension() { }
+TestModuleFileExtension::~TestModuleFileExtension() = default;
 
 ModuleFileExtensionMetadata
 TestModuleFileExtension::getExtensionMetadata() const {

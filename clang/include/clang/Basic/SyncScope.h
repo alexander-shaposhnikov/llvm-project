@@ -82,7 +82,7 @@ enum class AtomicScopeModelKind { None, OpenCL, HIP };
 /// Defines the interface for synch scope model.
 class AtomicScopeModel {
 public:
-  virtual ~AtomicScopeModel() {}
+  virtual ~AtomicScopeModel() = default;
   /// Maps language specific synch scope values to internal
   /// SyncScope enum.
   virtual SyncScope map(unsigned S) const = 0;
@@ -119,7 +119,7 @@ public:
     Last = SubGroup
   };
 
-  AtomicScopeOpenCLModel() {}
+  AtomicScopeOpenCLModel() = default;
 
   SyncScope map(unsigned S) const override {
     switch (static_cast<ID>(S)) {
@@ -168,7 +168,7 @@ public:
     Last = System
   };
 
-  AtomicScopeHIPModel() {}
+  AtomicScopeHIPModel() = default;
 
   SyncScope map(unsigned S) const override {
     switch (static_cast<ID>(S)) {

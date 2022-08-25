@@ -54,7 +54,7 @@ IncrementalExecutor::IncrementalExecutor(llvm::orc::ThreadSafeContext &TSC,
   }
 }
 
-IncrementalExecutor::~IncrementalExecutor() {}
+IncrementalExecutor::~IncrementalExecutor() = default;
 
 llvm::Error IncrementalExecutor::addModule(PartialTranslationUnit &PTU) {
   llvm::orc::ResourceTrackerSP RT =

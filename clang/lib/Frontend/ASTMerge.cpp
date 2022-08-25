@@ -90,8 +90,7 @@ ASTMergeAction::ASTMergeAction(std::unique_ptr<FrontendAction> adaptedAction,
   assert(AdaptedAction && "ASTMergeAction needs an action to adapt");
 }
 
-ASTMergeAction::~ASTMergeAction() {
-}
+ASTMergeAction::~ASTMergeAction() = default;
 
 bool ASTMergeAction::usesPreprocessorOnly() const {
   return AdaptedAction->usesPreprocessorOnly();

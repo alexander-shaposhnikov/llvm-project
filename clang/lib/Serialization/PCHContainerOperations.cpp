@@ -19,8 +19,8 @@
 
 using namespace clang;
 
-PCHContainerWriter::~PCHContainerWriter() {}
-PCHContainerReader::~PCHContainerReader() {}
+PCHContainerWriter::~PCHContainerWriter() = default;
+PCHContainerReader::~PCHContainerReader() = default;
 
 namespace {
 

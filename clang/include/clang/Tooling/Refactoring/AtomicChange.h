@@ -129,7 +129,7 @@ public:
   const llvm::Any &getMetadata() const { return Metadata; }
 
 private:
-  AtomicChange() {}
+  AtomicChange() = default;
 
   AtomicChange(std::string Key, std::string FilePath, std::string Error,
                std::vector<std::string> InsertedHeaders,

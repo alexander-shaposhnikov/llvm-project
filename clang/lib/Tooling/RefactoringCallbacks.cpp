@@ -19,7 +19,7 @@ using llvm::make_error;
 namespace clang {
 namespace tooling {
 
-RefactoringCallback::RefactoringCallback() {}
+RefactoringCallback::RefactoringCallback() = default;
 tooling::Replacements &RefactoringCallback::getReplacements() {
   return Replace;
 }

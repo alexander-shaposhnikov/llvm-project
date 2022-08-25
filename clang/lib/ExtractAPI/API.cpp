@@ -223,9 +223,9 @@ StringRef APISet::copyString(StringRef String) {
   return StringRef(reinterpret_cast<const char *>(Ptr), String.size());
 }
 
-APIRecord::~APIRecord() {}
+APIRecord::~APIRecord() = default;
 
-ObjCContainerRecord::~ObjCContainerRecord() {}
+ObjCContainerRecord::~ObjCContainerRecord() = default;
 
 void GlobalFunctionRecord::anchor() {}
 void GlobalVariableRecord::anchor() {}

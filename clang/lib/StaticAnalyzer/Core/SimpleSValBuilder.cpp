@@ -61,7 +61,7 @@ public:
   SimpleSValBuilder(llvm::BumpPtrAllocator &alloc, ASTContext &context,
                     ProgramStateManager &stateMgr)
       : SValBuilder(alloc, context, stateMgr) {}
-  ~SimpleSValBuilder() override {}
+  ~SimpleSValBuilder() override = default;
 
   SVal evalBinOpNN(ProgramStateRef state, BinaryOperator::Opcode op,
                    NonLoc lhs, NonLoc rhs, QualType resultTy) override;

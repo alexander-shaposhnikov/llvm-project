@@ -56,7 +56,7 @@ public:
   using Base::try_emplace;
   using Base::operator[];
 
-  Environment() {}
+  Environment() = default;
   Environment(const Environment &RHS) : Base(static_cast<const Base&>(RHS)) {}
   Environment(Environment &&RHS) : Base(std::move(RHS)) {}
   Environment(char *const *Env)

@@ -403,9 +403,9 @@ namespace clang {
 // Common Diagnostic implementation
 //===----------------------------------------------------------------------===//
 
-DiagnosticIDs::DiagnosticIDs() {}
+DiagnosticIDs::DiagnosticIDs() = default;
 
-DiagnosticIDs::~DiagnosticIDs() {}
+DiagnosticIDs::~DiagnosticIDs() = default;
 
 /// getCustomDiagID - Return an ID for a diagnostic with the specified message
 /// and level.  If this is the first request for this diagnostic, it is

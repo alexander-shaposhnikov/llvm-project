@@ -30,7 +30,7 @@ namespace format {
 
 class FormatTokenSource {
 public:
-  virtual ~FormatTokenSource() {}
+  virtual ~FormatTokenSource() = default;
 
   // Returns the next token in the token stream.
   virtual FormatToken *getNextToken() = 0;

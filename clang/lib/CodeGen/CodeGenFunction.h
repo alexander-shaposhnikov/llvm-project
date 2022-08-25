@@ -3938,7 +3938,7 @@ public:
     ConstantEmission(llvm::Constant *C, bool isReference)
       : ValueAndIsReference(C, isReference) {}
   public:
-    ConstantEmission() {}
+    ConstantEmission() = default;
     static ConstantEmission forReference(llvm::Constant *C) {
       return ConstantEmission(C, true);
     }

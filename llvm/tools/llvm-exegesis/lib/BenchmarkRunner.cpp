@@ -275,7 +275,7 @@ BenchmarkRunner::writeObjectFile(const BenchmarkCode &BC,
   return std::string(ResultPath.str());
 }
 
-BenchmarkRunner::FunctionExecutor::~FunctionExecutor() {}
+BenchmarkRunner::FunctionExecutor::~FunctionExecutor() = default;
 
 } // namespace exegesis
 } // namespace llvm

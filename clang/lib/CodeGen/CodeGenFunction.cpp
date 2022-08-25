@@ -2503,7 +2503,7 @@ Address CodeGenFunction::EmitFieldAnnotations(const FieldDecl *D,
   return Address(V, Addr.getElementType(), Addr.getAlignment());
 }
 
-CodeGenFunction::CGCapturedStmtInfo::~CGCapturedStmtInfo() { }
+CodeGenFunction::CGCapturedStmtInfo::~CGCapturedStmtInfo() = default;
 
 CodeGenFunction::SanitizerScope::SanitizerScope(CodeGenFunction *CGF)
     : CGF(CGF) {

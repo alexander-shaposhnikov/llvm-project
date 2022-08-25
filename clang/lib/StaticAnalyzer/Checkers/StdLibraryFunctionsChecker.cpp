@@ -116,7 +116,7 @@ class StdLibraryFunctionsChecker
   class ValueConstraint {
   public:
     ValueConstraint(ArgNo ArgN) : ArgN(ArgN) {}
-    virtual ~ValueConstraint() {}
+    virtual ~ValueConstraint() = default;
     /// Apply the effects of the constraint on the given program state. If null
     /// is returned then the constraint is not feasible.
     virtual ProgramStateRef apply(ProgramStateRef State, const CallEvent &Call,
@@ -405,7 +405,7 @@ class StdLibraryFunctionsChecker
     /// It may return empty string if no note tag is to be added.
     virtual std::string describe(StringRef FunctionName) const { return ""; }
 
-    virtual ~ErrnoConstraintBase() {}
+    virtual ~ErrnoConstraintBase() = default;
 
   protected:
     /// Many of the descendant classes use this value.

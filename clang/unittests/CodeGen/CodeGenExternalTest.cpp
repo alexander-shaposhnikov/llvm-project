@@ -60,7 +60,7 @@ struct MyASTConsumer : public ASTConsumer {
   {
   }
 
-  ~MyASTConsumer() { }
+  ~MyASTConsumer() = default;
 
   void Initialize(ASTContext &Context) override;
   void HandleCXXStaticMemberVarInstantiation(VarDecl *VD) override;

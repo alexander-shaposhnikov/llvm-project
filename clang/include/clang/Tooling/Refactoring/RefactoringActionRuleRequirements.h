@@ -80,7 +80,7 @@ public:
 /// A base class for any requirement that requires some refactoring options.
 class RefactoringOptionsRequirement : public RefactoringActionRuleRequirement {
 public:
-  virtual ~RefactoringOptionsRequirement() {}
+  virtual ~RefactoringOptionsRequirement() = default;
 
   /// Returns the set of refactoring options that are used when evaluating this
   /// requirement.

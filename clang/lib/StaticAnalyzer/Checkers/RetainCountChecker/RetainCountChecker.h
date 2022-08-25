@@ -275,7 +275,7 @@ public:
   /// Track initial parameters (for the entry point) for NS/CF objects.
   bool TrackNSCFStartParam = false;
 
-  RetainCountChecker() {};
+  RetainCountChecker() = default;;
 
   RetainSummaryManager &getSummaryManager(ASTContext &Ctx) const {
     if (!Summaries)

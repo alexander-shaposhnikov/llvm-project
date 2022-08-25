@@ -51,7 +51,7 @@ public:
   // Signals are signals gathered by observing how a symbol is used.
   // These are used to rank results.
   struct Signals {
-    Signals() {}
+    Signals() = default;
     Signals(unsigned Seen, unsigned Used) : Seen(Seen), Used(Used) {}
 
     // Number of times this symbol was visible to a TU.

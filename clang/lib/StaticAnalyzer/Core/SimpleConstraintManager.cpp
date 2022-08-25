@@ -20,7 +20,7 @@ namespace clang {
 
 namespace ento {
 
-SimpleConstraintManager::~SimpleConstraintManager() {}
+SimpleConstraintManager::~SimpleConstraintManager() = default;
 
 ProgramStateRef SimpleConstraintManager::assumeInternal(ProgramStateRef State,
                                                         DefinedSVal Cond,

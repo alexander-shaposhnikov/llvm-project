@@ -7319,7 +7319,7 @@ Clang::Clang(const ToolChain &TC, bool HasIntegratedBackend)
     // whether that tool is Clang based on the Tool's Name as a string.
     : Tool("clang", "clang frontend", TC), HasBackend(HasIntegratedBackend) {}
 
-Clang::~Clang() {}
+Clang::~Clang() = default;
 
 /// Add options related to the Objective-C runtime/ABI.
 ///

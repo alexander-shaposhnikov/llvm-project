@@ -453,7 +453,7 @@ protected:
   DenseMap<unsigned, BitVector> Partitions;
 
 public:
-  virtual ~GIMatchTreePartitioner() {}
+  virtual ~GIMatchTreePartitioner() = default;
   virtual std::unique_ptr<GIMatchTreePartitioner> clone() const = 0;
 
   /// Determines which partitions the given leaves belong to. A leaf may belong

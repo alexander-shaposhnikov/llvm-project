@@ -57,10 +57,10 @@ class CodeGenModule;
 /// region.
 class PrePostActionTy {
 public:
-  explicit PrePostActionTy() {}
+  explicit PrePostActionTy() = default;
   virtual void Enter(CodeGenFunction &CGF) {}
   virtual void Exit(CodeGenFunction &CGF) {}
-  virtual ~PrePostActionTy() {}
+  virtual ~PrePostActionTy() = default;
 };
 
 /// Class provides a way to call simple version of codegen for OpenMP region, or
@@ -917,7 +917,7 @@ private:
 public:
   explicit CGOpenMPRuntime(CodeGenModule &CGM)
       : CGOpenMPRuntime(CGM, ".", ".") {}
-  virtual ~CGOpenMPRuntime() {}
+  virtual ~CGOpenMPRuntime() = default;
   virtual void clear();
 
   /// Emits code for OpenMP 'if' clause using specified \a CodeGen
@@ -1689,7 +1689,7 @@ public:
     /// pointer address where the runtime returns the device pointers.
     llvm::DenseMap<const ValueDecl *, Address> CaptureDeviceAddrMap;
 
-    explicit TargetDataInfo() {}
+    explicit TargetDataInfo() = default;
     explicit TargetDataInfo(bool RequiresDevicePointerInfo,
                             bool SeparateBeginEndCalls)
         : RequiresDevicePointerInfo(RequiresDevicePointerInfo),
@@ -1930,7 +1930,7 @@ public:
 class CGOpenMPSIMDRuntime final : public CGOpenMPRuntime {
 public:
   explicit CGOpenMPSIMDRuntime(CodeGenModule &CGM) : CGOpenMPRuntime(CGM) {}
-  ~CGOpenMPSIMDRuntime() override {}
+  ~CGOpenMPSIMDRuntime() override = default;
 
   /// Emits outlined function for the specified OpenMP parallel directive
   /// \a D. This outlined function has type void(*)(kmp_int32 *ThreadID,

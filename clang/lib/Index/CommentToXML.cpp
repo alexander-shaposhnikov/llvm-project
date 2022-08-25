@@ -1123,8 +1123,8 @@ void CommentASTToXMLConverter::appendToResultWithCDATAEscaping(StringRef S) {
   Result << "]]>";
 }
 
-CommentToXMLConverter::CommentToXMLConverter() {}
-CommentToXMLConverter::~CommentToXMLConverter() {}
+CommentToXMLConverter::CommentToXMLConverter() = default;
+CommentToXMLConverter::~CommentToXMLConverter() = default;
 
 void CommentToXMLConverter::convertCommentToHTML(const FullComment *FC,
                                                  SmallVectorImpl<char> &HTML,

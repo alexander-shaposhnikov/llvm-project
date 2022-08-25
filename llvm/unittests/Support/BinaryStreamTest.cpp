@@ -109,7 +109,7 @@ constexpr uint32_t NumStreams = 2 * NumEndians;
 class BinaryStreamTest : public testing::Test {
 
 public:
-  BinaryStreamTest() {}
+  BinaryStreamTest() = default;
 
   void SetUp() override {
     Streams.clear();

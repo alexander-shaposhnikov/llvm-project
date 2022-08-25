@@ -21,7 +21,7 @@ namespace llvm {
 namespace objcopy {
 
 struct ConfigManager : public MultiFormatConfig {
-  virtual ~ConfigManager() {}
+  virtual ~ConfigManager() = default;
 
   const CommonConfig &getCommonConfig() const override { return Common; }
 

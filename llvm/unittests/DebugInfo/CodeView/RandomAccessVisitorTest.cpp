@@ -86,7 +86,7 @@ public:
 
 class RandomAccessVisitorTest : public testing::Test {
 public:
-  RandomAccessVisitorTest() {}
+  RandomAccessVisitorTest() = default;
 
   static void SetUpTestCase() {
     GlobalState = std::make_unique<GlobalTestState>();

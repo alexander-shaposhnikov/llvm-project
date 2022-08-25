@@ -42,7 +42,7 @@ public:
 protected:
   ByteCodeEmitter(Context &Ctx, Program &P) : Ctx(Ctx), P(P) {}
 
-  virtual ~ByteCodeEmitter() {}
+  virtual ~ByteCodeEmitter() = default;
 
   /// Define a label.
   void emitLabel(LabelTy Label);

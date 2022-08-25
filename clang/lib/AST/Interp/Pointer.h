@@ -39,7 +39,7 @@ private:
   static constexpr unsigned RootPtrMark = (unsigned)-1;
 
 public:
-  Pointer() {}
+  Pointer() = default;
   Pointer(Block *B);
   Pointer(const Pointer &P);
   Pointer(Pointer &&P);

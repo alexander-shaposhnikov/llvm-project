@@ -246,6 +246,6 @@ void LambdaScopeInfo::visitPotentialCaptures(
   }
 }
 
-FunctionScopeInfo::~FunctionScopeInfo() { }
-BlockScopeInfo::~BlockScopeInfo() { }
-CapturedRegionScopeInfo::~CapturedRegionScopeInfo() { }
+FunctionScopeInfo::~FunctionScopeInfo() = default;
+BlockScopeInfo::~BlockScopeInfo() = default;
+CapturedRegionScopeInfo::~CapturedRegionScopeInfo() = default;

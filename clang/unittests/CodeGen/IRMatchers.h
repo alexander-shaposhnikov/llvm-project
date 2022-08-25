@@ -106,7 +106,7 @@ private:
 ///
 class Matcher {
 public:
-  virtual ~Matcher() {}
+  virtual ~Matcher() = default;
 
   /// Returns true if the entity on the top of the specified context satisfies
   /// the matcher condition.

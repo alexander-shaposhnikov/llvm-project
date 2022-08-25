@@ -18,7 +18,7 @@ class raw_pwrite_stream;
 
 class MCDXContainerTargetWriter : public MCObjectTargetWriter {
 protected:
-  MCDXContainerTargetWriter() {}
+  MCDXContainerTargetWriter() = default;
 
 public:
   virtual ~MCDXContainerTargetWriter();

@@ -733,7 +733,7 @@ private:
 class CompileCheckVisitor
   : public RecursiveASTVisitor<CompileCheckVisitor> {
 public:
-  CompileCheckVisitor() {}
+  CompileCheckVisitor() = default;
 
   bool TraverseStmt(Stmt *S) { return true; }
   bool TraverseType(QualType T) { return true; }
@@ -778,7 +778,7 @@ public:
 
 class CompileCheckConsumer : public ASTConsumer {
 public:
-  CompileCheckConsumer() {}
+  CompileCheckConsumer() = default;
 
   void HandleTranslationUnit(ASTContext &Ctx) override {
     CompileCheckVisitor().TraverseDecl(Ctx.getTranslationUnitDecl());
@@ -787,7 +787,7 @@ public:
 
 class CompileCheckAction : public SyntaxOnlyAction {
 public:
-  CompileCheckAction() {}
+  CompileCheckAction() = default;
 
 protected:
   std::unique_ptr<clang::ASTConsumer>
@@ -798,7 +798,7 @@ protected:
 
 class CompileCheckFrontendActionFactory : public FrontendActionFactory {
 public:
-  CompileCheckFrontendActionFactory() {}
+  CompileCheckFrontendActionFactory() = default;
 
   std::unique_ptr<FrontendAction> create() override {
     return std::make_unique<CompileCheckAction>();

@@ -117,7 +117,7 @@ struct EvalCallOptions {
   /// as if copy elision is disabled.
   bool IsElidableCtorThatHasNotBeenElided = false;
 
-  EvalCallOptions() {}
+  EvalCallOptions() = default;
 };
 
 class ExprEngine {

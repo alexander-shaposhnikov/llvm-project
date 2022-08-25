@@ -351,8 +351,7 @@ GenerateHeaderUnitAction::CreateOutputFile(CompilerInstance &CI,
   return CI.createDefaultOutputFile(/*Binary=*/true, InFile, "pcm");
 }
 
-SyntaxOnlyAction::~SyntaxOnlyAction() {
-}
+SyntaxOnlyAction::~SyntaxOnlyAction() = default;
 
 std::unique_ptr<ASTConsumer>
 SyntaxOnlyAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {

@@ -295,7 +295,7 @@ private:
 
 public:
   ExpressionHandler(Tracker &ParentTracker) : ParentTracker(ParentTracker) {}
-  virtual ~ExpressionHandler() {}
+  virtual ~ExpressionHandler() = default;
 
   /// Handle the given expression from the given node.
   ///
@@ -318,7 +318,7 @@ private:
 
 public:
   StoreHandler(Tracker &ParentTracker) : ParentTracker(ParentTracker) {}
-  virtual ~StoreHandler() {}
+  virtual ~StoreHandler() = default;
 
   /// Handle the given store and produce the node.
   ///

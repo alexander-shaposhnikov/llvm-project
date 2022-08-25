@@ -20,7 +20,7 @@ using namespace diagtool;
 DiagTool::DiagTool(llvm::StringRef toolCmd, llvm::StringRef toolDesc)
     : cmd(std::string(toolCmd)), description(std::string(toolDesc)) {}
 
-DiagTool::~DiagTool() {}
+DiagTool::~DiagTool() = default;
 
 typedef llvm::StringMap<DiagTool *> ToolMap;
 static inline ToolMap *getTools(void *v) { return static_cast<ToolMap*>(v); }

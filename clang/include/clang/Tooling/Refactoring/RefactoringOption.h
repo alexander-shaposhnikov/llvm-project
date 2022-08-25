@@ -25,7 +25,7 @@ class RefactoringOptionVisitor;
 /// the clang-refactor tool is used.
 class RefactoringOption {
 public:
-  virtual ~RefactoringOption() {}
+  virtual ~RefactoringOption() = default;
 
   /// Returns the name of the refactoring option.
   ///

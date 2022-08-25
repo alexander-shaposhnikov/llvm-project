@@ -171,14 +171,7 @@ struct Frame {
            Other.Column == Column && Other.IsInlineFrame == IsInlineFrame;
   }
 
-  Frame &operator=(const Frame &Other) {
-    Function = Other.Function;
-    SymbolName = Other.SymbolName;
-    LineOffset = Other.LineOffset;
-    Column = Other.Column;
-    IsInlineFrame = Other.IsInlineFrame;
-    return *this;
-  }
+  Frame &operator=(const Frame &Other) = default;
 
   bool operator!=(const Frame &Other) const { return !operator==(Other); }
 

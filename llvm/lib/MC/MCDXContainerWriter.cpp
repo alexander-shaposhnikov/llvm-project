@@ -18,7 +18,7 @@
 
 using namespace llvm;
 
-MCDXContainerTargetWriter::~MCDXContainerTargetWriter() {}
+MCDXContainerTargetWriter::~MCDXContainerTargetWriter() = default;
 
 namespace {
 class DXContainerObjectWriter : public MCObjectWriter {
@@ -32,7 +32,7 @@ public:
                           raw_pwrite_stream &OS)
       : W(OS, support::little), TargetObjectWriter(std::move(MOTW)) {}
 
-  ~DXContainerObjectWriter() override {}
+  ~DXContainerObjectWriter() override = default;
 
 private:
   void recordRelocation(MCAssembler &Asm, const MCAsmLayout &Layout,

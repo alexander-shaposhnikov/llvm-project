@@ -52,7 +52,7 @@ public:
   virtual Error visitStyleStmt(const StyleStmt *) = 0;
   virtual Error visitVersionStmt(const VersionStmt *) = 0;
 
-  virtual ~Visitor() {}
+  virtual ~Visitor() = default;
 };
 
 } // namespace rc

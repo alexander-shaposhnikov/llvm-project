@@ -29,18 +29,14 @@ struct ObjCMethodList {
   /// The next list object and 2 bits for extra info.
   llvm::PointerIntPair<ObjCMethodList *, 2> NextAndExtraBits;
 
-  ObjCMethodList() { }
+  ObjCMethodList() = default;
   ObjCMethodList(ObjCMethodDecl *M)
       : MethodAndHasMoreThanOneDecl(M, 0) {}
   ObjCMethodList(const ObjCMethodList &L)
-      : MethodAndHasMoreThanOneDecl(L.MethodAndHasMoreThanOneDecl),
-        NextAndExtraBits(L.NextAndExtraBits) {}
+      
+        = default;
 
-  ObjCMethodList &operator=(const ObjCMethodList &L) {
-    MethodAndHasMoreThanOneDecl = L.MethodAndHasMoreThanOneDecl;
-    NextAndExtraBits = L.NextAndExtraBits;
-    return *this;
-  }
+  ObjCMethodList &operator=(const ObjCMethodList &L) = default;
 
   ObjCMethodList *getNext() const { return NextAndExtraBits.getPointer(); }
   unsigned getBits() const { return NextAndExtraBits.getInt(); }

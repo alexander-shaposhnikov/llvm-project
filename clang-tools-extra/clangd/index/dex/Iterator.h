@@ -80,7 +80,7 @@ public:
   /// Returns an estimate of advance() calls before the iterator is exhausted.
   virtual size_t estimateSize() const = 0;
 
-  virtual ~Iterator() {}
+  virtual ~Iterator() = default;
 
   /// Prints a convenient human-readable iterator representation by recursively
   /// dumping iterators in the following format:

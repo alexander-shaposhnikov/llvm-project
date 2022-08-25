@@ -392,7 +392,7 @@ public:
       SuspiciousCloneInfo(const VarDecl *Variable, const Stmt *Mention,
                           const VarDecl *Suggestion)
           : Variable(Variable), Mention(Mention), Suggestion(Suggestion) {}
-      SuspiciousCloneInfo() {}
+      SuspiciousCloneInfo() = default;
     };
     /// The first clone in the pair which always has a suggested variable.
     SuspiciousCloneInfo FirstCloneInfo;

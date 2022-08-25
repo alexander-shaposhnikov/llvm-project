@@ -606,7 +606,7 @@ HexagonToolChain::HexagonToolChain(const Driver &D, const llvm::Triple &Triple,
   getHexagonLibraryPaths(Args, LibPaths);
 }
 
-HexagonToolChain::~HexagonToolChain() {}
+HexagonToolChain::~HexagonToolChain() = default;
 
 void HexagonToolChain::AddCXXStdlibLibArgs(const ArgList &Args,
                                            ArgStringList &CmdArgs) const {

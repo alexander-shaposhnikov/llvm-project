@@ -17,7 +17,7 @@ namespace llvm {
 
 class MCSPIRVObjectTargetWriter : public MCObjectTargetWriter {
 protected:
-  explicit MCSPIRVObjectTargetWriter() {}
+  explicit MCSPIRVObjectTargetWriter() = default;
 
 public:
   Triple::ObjectFormatType getFormat() const override { return Triple::SPIRV; }

@@ -18,7 +18,7 @@ namespace clang {
 
 namespace ento {
 
-RangedConstraintManager::~RangedConstraintManager() {}
+RangedConstraintManager::~RangedConstraintManager() = default;
 
 ProgramStateRef RangedConstraintManager::assumeSym(ProgramStateRef State,
                                                    SymbolRef Sym,

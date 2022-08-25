@@ -33,7 +33,7 @@ static const char HeaderName[] = "symbols.h";
 
 class TestSymbolReporter : public SymbolReporter {
 public:
-  ~TestSymbolReporter() override {}
+  ~TestSymbolReporter() override = default;
 
   void reportSymbols(llvm::StringRef FileName,
                      const SymbolInfo::SignalMap &NewSymbols) override {

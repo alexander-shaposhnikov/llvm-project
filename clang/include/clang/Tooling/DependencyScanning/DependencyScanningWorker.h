@@ -30,7 +30,7 @@ class DependencyScanningWorkerFilesystem;
 
 class DependencyConsumer {
 public:
-  virtual ~DependencyConsumer() {}
+  virtual ~DependencyConsumer() = default;
 
   virtual void
   handleDependencyOutputOpts(const DependencyOutputOptions &Opts) = 0;

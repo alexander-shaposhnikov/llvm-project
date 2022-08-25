@@ -487,7 +487,7 @@ private:
 class Undefined : public SExpr {
 public:
   Undefined(const Stmt *S = nullptr) : SExpr(COP_Undefined), Cstmt(S) {}
-  Undefined(const Undefined &U) : SExpr(U), Cstmt(U.Cstmt) {}
+  Undefined(const Undefined &U)  = default;
 
   static bool classof(const SExpr *E) { return E->opcode() == COP_Undefined; }
 

@@ -67,7 +67,7 @@ private:
 /// Describes the statement/declaration an opcode was generated from.
 class SourceInfo final {
 public:
-  SourceInfo() {}
+  SourceInfo() = default;
   SourceInfo(const Stmt *E) : Source(E) {}
   SourceInfo(const Decl *D) : Source(D) {}
 
@@ -88,7 +88,7 @@ using SourceMap = std::vector<std::pair<unsigned, SourceInfo>>;
 /// Interface for classes which map locations to sources.
 class SourceMapper {
 public:
-  virtual ~SourceMapper() {}
+  virtual ~SourceMapper() = default;
 
   /// Returns source information for a given PC in a function.
   virtual SourceInfo getSource(Function *F, CodePtr PC) const = 0;

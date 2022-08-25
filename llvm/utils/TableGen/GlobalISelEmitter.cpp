@@ -1195,7 +1195,7 @@ public:
   OperandPredicateMatcher(PredicateKind Kind, unsigned InsnVarID,
                           unsigned OpIdx)
       : PredicateMatcher(Kind, InsnVarID, OpIdx) {}
-  virtual ~OperandPredicateMatcher() {}
+  virtual ~OperandPredicateMatcher() = default;
 
   /// Compare the priority of this object and B.
   ///
@@ -1761,7 +1761,7 @@ class InstructionPredicateMatcher : public PredicateMatcher {
 public:
   InstructionPredicateMatcher(PredicateKind Kind, unsigned InsnVarID)
       : PredicateMatcher(Kind, InsnVarID) {}
-  virtual ~InstructionPredicateMatcher() {}
+  virtual ~InstructionPredicateMatcher() = default;
 
   /// Compare the priority of this object and B.
   ///
@@ -2584,7 +2584,7 @@ protected:
 
 public:
   OperandRenderer(RendererKind Kind) : Kind(Kind) {}
-  virtual ~OperandRenderer() {}
+  virtual ~OperandRenderer() = default;
 
   RendererKind getKind() const { return Kind; }
 
@@ -3045,7 +3045,7 @@ public:
 /// * Adding an operand to an instruction.
 class MatchAction {
 public:
-  virtual ~MatchAction() {}
+  virtual ~MatchAction() = default;
 
   /// Emit the MatchTable opcodes to implement the action.
   virtual void emitActionOpcodes(MatchTable &Table,

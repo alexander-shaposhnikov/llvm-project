@@ -28,7 +28,7 @@ namespace llvm {
 namespace mca {
 
 // This virtual dtor serves as the anchor for the CodeRegionGenerator class.
-CodeRegionGenerator::~CodeRegionGenerator() {}
+CodeRegionGenerator::~CodeRegionGenerator() = default;
 
 // A comment consumer that parses strings.  The only valid tokens are strings.
 class MCACommentConsumer : public AsmCommentConsumer {

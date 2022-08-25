@@ -21,7 +21,7 @@ namespace interp {
 /// Stack frame storing temporaries and parameters.
 class InterpStack final {
 public:
-  InterpStack() {}
+  InterpStack() = default;
 
   /// Destroys the stack, freeing up storage.
   ~InterpStack();

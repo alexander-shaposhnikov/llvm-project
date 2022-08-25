@@ -20,7 +20,7 @@
 using namespace clang;
 
 // Give ASTDeserializationListener's VTable a home.
-ASTDeserializationListener::~ASTDeserializationListener() { }
+ASTDeserializationListener::~ASTDeserializationListener() = default;
 
 serialization::TypeIdx
 serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {

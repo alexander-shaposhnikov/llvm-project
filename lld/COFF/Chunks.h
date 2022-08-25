@@ -625,7 +625,7 @@ public:
 // of an empty chunk isn't MinGW specific.
 class EmptyChunk : public NonSectionChunk {
 public:
-  EmptyChunk() {}
+  EmptyChunk() = default;
   size_t getSize() const override { return 0; }
   void writeTo(uint8_t *buf) const override {}
 };

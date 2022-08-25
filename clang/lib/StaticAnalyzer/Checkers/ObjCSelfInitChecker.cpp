@@ -67,7 +67,7 @@ class ObjCSelfInitChecker : public Checker<  check::PostObjCMessage,
                            const char *errorStr) const;
 
 public:
-  ObjCSelfInitChecker() {}
+  ObjCSelfInitChecker() = default;
   void checkPostObjCMessage(const ObjCMethodCall &Msg, CheckerContext &C) const;
   void checkPostStmt(const ObjCIvarRefExpr *E, CheckerContext &C) const;
   void checkPreStmt(const ReturnStmt *S, CheckerContext &C) const;

@@ -91,7 +91,7 @@ public:
   /// Contains starting character index and length of split.
   typedef std::pair<StringRef::size_type, unsigned> Split;
 
-  virtual ~BreakableToken() {}
+  virtual ~BreakableToken() = default;
 
   /// Returns the number of lines in this token in the original code.
   virtual unsigned getLineCount() const = 0;

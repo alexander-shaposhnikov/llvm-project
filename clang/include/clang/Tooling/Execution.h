@@ -76,7 +76,7 @@ private:
 /// compilation and results.
 class ExecutionContext {
 public:
-  virtual ~ExecutionContext() {}
+  virtual ~ExecutionContext() = default;
 
   /// Initializes a context. This does not take ownership of `Results`.
   explicit ExecutionContext(ToolResults *Results) : Results(Results) {}
@@ -110,7 +110,7 @@ private:
 ///  executor according to the command-line arguments.
 class ToolExecutor {
 public:
-  virtual ~ToolExecutor() {}
+  virtual ~ToolExecutor() = default;
 
   /// Returns the name of a specific executor.
   virtual StringRef getExecutorName() const = 0;
@@ -150,7 +150,7 @@ public:
 /// used as a plugin to be registered into ToolExecutorPluginRegistry.
 class ToolExecutorPlugin {
 public:
-  virtual ~ToolExecutorPlugin() {}
+  virtual ~ToolExecutorPlugin() = default;
 
   /// Create an `ToolExecutor`.
   ///

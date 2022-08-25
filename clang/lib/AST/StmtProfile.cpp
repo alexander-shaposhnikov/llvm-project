@@ -34,7 +34,7 @@ namespace {
     StmtProfiler(llvm::FoldingSetNodeID &ID, bool Canonical)
         : ID(ID), Canonical(Canonical) {}
 
-    virtual ~StmtProfiler() {}
+    virtual ~StmtProfiler() = default;
 
     void VisitStmt(const Stmt *S);
 

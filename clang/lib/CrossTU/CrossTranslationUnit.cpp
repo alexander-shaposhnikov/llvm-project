@@ -239,7 +239,7 @@ template <typename T> static bool hasBodyOrInit(const T *D) {
 CrossTranslationUnitContext::CrossTranslationUnitContext(CompilerInstance &CI)
     : Context(CI.getASTContext()), ASTStorage(CI) {}
 
-CrossTranslationUnitContext::~CrossTranslationUnitContext() {}
+CrossTranslationUnitContext::~CrossTranslationUnitContext() = default;
 
 llvm::Optional<std::string>
 CrossTranslationUnitContext::getLookupName(const NamedDecl *ND) {

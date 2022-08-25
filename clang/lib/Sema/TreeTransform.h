@@ -4513,7 +4513,7 @@ public:
     const TemplateArgumentLoc *operator->() const { return &Arg; }
   };
 
-  TemplateArgumentLocInventIterator() { }
+  TemplateArgumentLocInventIterator() = default;
 
   explicit TemplateArgumentLocInventIterator(TreeTransform<Derived> &Self,
                                              InputIterator Iter)
@@ -6570,7 +6570,7 @@ QualType TreeTransform<Derived>::TransformDependentBitIntType(
     };
 
 
-    TemplateArgumentLocContainerIterator() {}
+    TemplateArgumentLocContainerIterator() = default;
 
     TemplateArgumentLocContainerIterator(ArgLocContainer &Container,
                                  unsigned Index)

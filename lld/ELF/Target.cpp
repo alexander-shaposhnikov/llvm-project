@@ -118,7 +118,7 @@ ErrorPlace elf::getErrorPlace(const uint8_t *loc) {
   return {};
 }
 
-TargetInfo::~TargetInfo() {}
+TargetInfo::~TargetInfo() = default;
 
 int64_t TargetInfo::getImplicitAddend(const uint8_t *buf, RelType type) const {
   internalLinkerError(getErrorLocation(buf),

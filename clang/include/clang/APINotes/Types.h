@@ -133,7 +133,7 @@ class CommonTypeInfo : public CommonEntityInfo {
   llvm::Optional<std::string> NSErrorDomain;
 
 public:
-  CommonTypeInfo() {}
+  CommonTypeInfo() = default;
 
   const llvm::Optional<std::string> &getSwiftBridge() const {
     return SwiftBridge;
@@ -633,19 +633,19 @@ inline bool operator!=(const ObjCMethodInfo &LHS, const ObjCMethodInfo &RHS) {
 /// Describes API notes data for a global variable.
 class GlobalVariableInfo : public VariableInfo {
 public:
-  GlobalVariableInfo() {}
+  GlobalVariableInfo() = default;
 };
 
 /// Describes API notes data for a global function.
 class GlobalFunctionInfo : public FunctionInfo {
 public:
-  GlobalFunctionInfo() {}
+  GlobalFunctionInfo() = default;
 };
 
 /// Describes API notes data for an enumerator.
 class EnumConstantInfo : public CommonEntityInfo {
 public:
-  EnumConstantInfo() {}
+  EnumConstantInfo() = default;
 };
 
 /// Describes API notes data for a tag.
@@ -700,7 +700,7 @@ class TypedefInfo : public CommonTypeInfo {
 public:
   llvm::Optional<SwiftNewTypeKind> SwiftWrapper;
 
-  TypedefInfo() {}
+  TypedefInfo() = default;
 
   TypedefInfo &operator|=(const TypedefInfo &RHS) {
     static_cast<CommonTypeInfo &>(*this) |= RHS;

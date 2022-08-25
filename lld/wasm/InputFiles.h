@@ -48,7 +48,7 @@ public:
     BitcodeKind,
   };
 
-  virtual ~InputFile() {}
+  virtual ~InputFile() = default;
 
   // Returns the filename.
   StringRef getName() const { return mb.getBufferIdentifier(); }

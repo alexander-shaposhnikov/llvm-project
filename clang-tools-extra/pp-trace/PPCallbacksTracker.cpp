@@ -101,7 +101,7 @@ PPCallbacksTracker::PPCallbacksTracker(const FilterType &Filters,
                                        Preprocessor &PP)
     : CallbackCalls(CallbackCalls), Filters(Filters), PP(PP) {}
 
-PPCallbacksTracker::~PPCallbacksTracker() {}
+PPCallbacksTracker::~PPCallbacksTracker() = default;
 
 // Callback functions.
 

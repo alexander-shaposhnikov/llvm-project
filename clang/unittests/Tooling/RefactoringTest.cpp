@@ -585,7 +585,7 @@ TEST(ShiftedCodePositionTest, NoReplacementText) {
 
 class FlushRewrittenFilesTest : public ::testing::Test {
 public:
-   FlushRewrittenFilesTest() {}
+   FlushRewrittenFilesTest() = default;
 
    ~FlushRewrittenFilesTest() override {
     for (llvm::StringMap<std::string>::iterator I = TemporaryFiles.begin(),
@@ -1305,7 +1305,7 @@ protected:
     Spec.Style = format::getLLVMStyle();
   }
 
-  ~ApplyAtomicChangesTest() override {}
+  ~ApplyAtomicChangesTest() override = default;
 
   void setInput(llvm::StringRef Input) {
     Code = std::string(Input);

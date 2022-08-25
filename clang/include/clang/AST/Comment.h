@@ -420,7 +420,7 @@ public:
     SourceRange ValueRange;
     StringRef Value;
 
-    Attribute() { }
+    Attribute() = default;
 
     Attribute(SourceLocation NameLocBegin, StringRef Name)
         : NameLocBegin(NameLocBegin), Name(Name), EqualsLoc(SourceLocation()) {}

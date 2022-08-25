@@ -34,9 +34,9 @@ namespace clang {
 template <typename T>
 class TestVisitor : public RecursiveASTVisitor<T> {
 public:
-  TestVisitor() { }
+  TestVisitor() = default;
 
-  virtual ~TestVisitor() { }
+  virtual ~TestVisitor() = default;
 
   enum Language {
     Lang_C,

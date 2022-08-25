@@ -277,8 +277,7 @@ CodeGenTarget::CodeGenTarget(RecordKeeper &records)
   TargetRec = Targets[0];
 }
 
-CodeGenTarget::~CodeGenTarget() {
-}
+CodeGenTarget::~CodeGenTarget() = default;
 
 StringRef CodeGenTarget::getName() const { return TargetRec->getName(); }
 

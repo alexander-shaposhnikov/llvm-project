@@ -199,7 +199,7 @@ class LoopInfoStack {
   void operator=(const LoopInfoStack &) = delete;
 
 public:
-  LoopInfoStack() {}
+  LoopInfoStack() = default;
 
   /// Begin a new structured loop. The set of staged attributes will be
   /// applied to the loop and then cleared.

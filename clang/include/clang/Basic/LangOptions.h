@@ -796,7 +796,7 @@ public:
   static constexpr storage_type OverrideMaskBits =
       (static_cast<storage_type>(1) << FPOptions::StorageBitSize) - 1;
 
-  FPOptionsOverride() {}
+  FPOptionsOverride() = default;
   FPOptionsOverride(const LangOptions &LO)
       : Options(LO), OverrideMask(OverrideMaskBits) {}
   FPOptionsOverride(FPOptions FPO)

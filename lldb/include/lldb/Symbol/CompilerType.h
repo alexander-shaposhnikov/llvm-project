@@ -44,17 +44,13 @@ public:
   }
 
   CompilerType(const CompilerType &rhs)
-      : m_type(rhs.m_type), m_type_system(rhs.m_type_system) {}
+       = default;
 
   CompilerType() = default;
 
   /// Operators.
   /// \{
-  const CompilerType &operator=(const CompilerType &rhs) {
-    m_type = rhs.m_type;
-    m_type_system = rhs.m_type_system;
-    return *this;
-  }
+  const CompilerType &operator=(const CompilerType &rhs) = default;
 
   bool operator<(const CompilerType &rhs) const {
     if (m_type_system == rhs.m_type_system)

@@ -54,7 +54,7 @@ public:
   class Observer {
     virtual void anchor();
   public:
-    virtual ~Observer() {}
+    virtual ~Observer() = default;
 
     /// A callback invoked right before invoking the
     ///  liveness transfer function on the given statement.

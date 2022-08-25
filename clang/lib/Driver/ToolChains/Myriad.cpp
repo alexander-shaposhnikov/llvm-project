@@ -236,7 +236,7 @@ MyriadToolChain::MyriadToolChain(const Driver &D, const llvm::Triple &Triple,
   addPathIfExists(D, D.Dir + "/../sparc-myriad-rtems/lib", getFilePaths());
 }
 
-MyriadToolChain::~MyriadToolChain() {}
+MyriadToolChain::~MyriadToolChain() = default;
 
 void MyriadToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
                                                 ArgStringList &CC1Args) const {

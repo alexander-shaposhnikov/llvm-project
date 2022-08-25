@@ -39,7 +39,7 @@ class NonnullGlobalConstantsChecker : public Checker<check::Location> {
   mutable IdentifierInfo *CFNullRefII = nullptr;
 
 public:
-  NonnullGlobalConstantsChecker() {}
+  NonnullGlobalConstantsChecker() = default;
 
   void checkLocation(SVal l, bool isLoad, const Stmt *S,
                      CheckerContext &C) const;
