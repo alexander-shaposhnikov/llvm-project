@@ -2735,7 +2735,7 @@ bool Sema::AttachBaseSpecifiers(CXXRecordDecl *Class,
   // that we can properly diagnose redundant direct base types. Note
   // that the key is always the unqualified canonical type of the base
   // class.
-  std::map<QualType, CXXBaseSpecifier*, QualTypeOrdering> KnownBaseTypes;
+  llvm::DenseMap<QualType, CXXBaseSpecifier*> KnownBaseTypes;
 
   // Used to track indirect bases so we can see if a direct base is
   // ambiguous.
