@@ -223,7 +223,7 @@ public:
   bool isPointerTy() const { return getTypeID() == PointerTyID; }
 
   /// True if this is an instance of an opaque PointerType.
-  bool isOpaquePointerTy() const;
+  bool isOpaquePointerTy() const LLVM_READONLY;
 
   /// Return true if this is a pointer type or a vector of pointer types.
   bool isPtrOrPtrVectorTy() const { return getScalarType()->isPointerTy(); }
@@ -237,11 +237,11 @@ public:
   /// type 'Ty'. For example, i8* to i32*. BitCasts are valid for types of the
   /// same size only where no re-interpretation of the bits is done.
   /// Determine if this type could be losslessly bitcast to Ty
-  bool canLosslesslyBitCastTo(Type *Ty) const;
+  bool canLosslesslyBitCastTo(Type *Ty) const LLVM_READONLY;
 
   /// Return true if this type is empty, that is, it has no elements or all of
   /// its elements are empty.
-  bool isEmptyTy() const;
+  bool isEmptyTy() const LLVM_READONLY;
 
   /// Return true if the type is "first class", meaning it is a valid type for a
   /// Value.
@@ -303,11 +303,11 @@ public:
   /// Return the width of the mantissa of this type. This is only valid on
   /// floating-point types. If the FP type does not have a stable mantissa (e.g.
   /// ppc long double), this method returns -1.
-  int getFPMantissaWidth() const;
+  int getFPMantissaWidth() const LLVM_READONLY;
 
   /// Return whether the type is IEEE compatible, as defined by the eponymous
   /// method in APFloat.
-  bool isIEEE() const;
+  bool isIEEE() const LLVM_READONLY;
 
   /// If this is a vector type, return the element type, otherwise return
   /// 'this'.
@@ -355,7 +355,7 @@ public:
   // only intended to cover the core methods that are frequently used, helper
   // methods should not be added here.
 
-  inline unsigned getIntegerBitWidth() const;
+  inline unsigned getIntegerBitWidth() const LLVM_READONLY;
 
   inline Type *getFunctionParamType(unsigned i) const;
   inline unsigned getFunctionNumParams() const;
@@ -405,7 +405,7 @@ public:
   inline Type *getExtendedType() const;
 
   /// Get the address space of this pointer or pointer vector type.
-  inline unsigned getPointerAddressSpace() const;
+  inline unsigned getPointerAddressSpace() const LLVM_READONLY;
 
   //===--------------------------------------------------------------------===//
   // Static members exported by the Type class itself.  Useful for getting
