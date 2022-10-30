@@ -50,76 +50,76 @@ public:
   Constant(const Constant &) = delete;
 
   /// Return true if this is the value that would be returned by getNullValue.
-  bool isNullValue() const;
+  bool isNullValue() const LLVM_READONLY;
 
   /// Returns true if the value is one.
-  bool isOneValue() const;
+  bool isOneValue() const LLVM_READONLY;
 
   /// Return true if the value is not the one value, or,
   /// for vectors, does not contain one value elements.
-  bool isNotOneValue() const;
+  bool isNotOneValue() const LLVM_READONLY;
 
   /// Return true if this is the value that would be returned by
   /// getAllOnesValue.
-  bool isAllOnesValue() const;
+  bool isAllOnesValue() const LLVM_READONLY;
 
   /// Return true if the value is what would be returned by
   /// getZeroValueForNegation.
-  bool isNegativeZeroValue() const;
+  bool isNegativeZeroValue() const LLVM_READONLY;
 
   /// Return true if the value is negative zero or null value.
-  bool isZeroValue() const;
+  bool isZeroValue() const LLVM_READONLY;
 
   /// Return true if the value is not the smallest signed value, or,
   /// for vectors, does not contain smallest signed value elements.
-  bool isNotMinSignedValue() const;
+  bool isNotMinSignedValue() const LLVM_READONLY;
 
   /// Return true if the value is the smallest signed value.
-  bool isMinSignedValue() const;
+  bool isMinSignedValue() const LLVM_READONLY;
 
   /// Return true if this is a finite and non-zero floating-point scalar
   /// constant or a fixed width vector constant with all finite and non-zero
   /// elements.
-  bool isFiniteNonZeroFP() const;
+  bool isFiniteNonZeroFP() const LLVM_READONLY;
 
   /// Return true if this is a normal (as opposed to denormal, infinity, nan,
   /// or zero) floating-point scalar constant or a vector constant with all
   /// normal elements. See APFloat::isNormal.
-  bool isNormalFP() const;
+  bool isNormalFP() const LLVM_READONLY;
 
   /// Return true if this scalar has an exact multiplicative inverse or this
   /// vector has an exact multiplicative inverse for each element in the vector.
-  bool hasExactInverseFP() const;
+  bool hasExactInverseFP() const LLVM_READONLY;
 
   /// Return true if this is a floating-point NaN constant or a vector
   /// floating-point constant with all NaN elements.
-  bool isNaN() const;
+  bool isNaN() const LLVM_READONLY;
 
   /// Return true if this constant and a constant 'Y' are element-wise equal.
   /// This is identical to just comparing the pointers, with the exception that
   /// for vectors, if only one of the constants has an `undef` element in some
   /// lane, the constants still match.
-  bool isElementWiseEqual(Value *Y) const;
+  bool isElementWiseEqual(Value *Y) const LLVM_READONLY;
 
   /// Return true if this is a vector constant that includes any undef or
   /// poison elements. Since it is impossible to inspect a scalable vector
   /// element- wise at compile time, this function returns true only if the
   /// entire vector is undef or poison.
-  bool containsUndefOrPoisonElement() const;
+  bool containsUndefOrPoisonElement() const LLVM_READONLY;
 
   /// Return true if this is a vector constant that includes any poison
   /// elements.
-  bool containsPoisonElement() const;
+  bool containsPoisonElement() const LLVM_READONLY;
 
   /// Return true if this is a fixed width vector constant that includes
   /// any constant expressions.
-  bool containsConstantExpression() const;
+  bool containsConstantExpression() const LLVM_READONLY;
 
   /// Return true if the value can vary between threads.
-  bool isThreadDependent() const;
+  bool isThreadDependent() const LLVM_READONLY;
 
   /// Return true if the value is dependent on a dllimport variable.
-  bool isDLLImportDependent() const;
+  bool isDLLImportDependent() const LLVM_READONLY;
 
   /// Return true if the constant has users other than constant expressions and
   /// other dangling things.
@@ -131,8 +131,8 @@ public:
   /// so.
   ///
   /// FIXME: This really should not be in IR.
-  bool needsRelocation() const;
-  bool needsDynamicRelocation() const;
+  bool needsRelocation() const LLVM_READONLY;
+  bool needsDynamicRelocation() const LLVM_READONLY;
 
   /// For aggregates (struct/array/vector) return the constant that corresponds
   /// to the specified element if possible, or null if not. This can return null

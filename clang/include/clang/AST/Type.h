@@ -795,8 +795,8 @@ public:
     return getTypePtr();
   }
 
-  bool isCanonical() const;
-  bool isCanonicalAsParam() const;
+  bool isCanonical() const LLVM_READONLY;
+  bool isCanonicalAsParam() const LLVM_READONLY;
 
   /// Return true if this QualType doesn't point to a type yet.
   bool isNull() const {
@@ -804,7 +804,7 @@ public:
   }
 
   // Determines if a type can form `T&`.
-  bool isReferenceable() const;
+  bool isReferenceable() const LLVM_READONLY;
 
   /// Determine whether this particular QualType instance has the
   /// "const" qualifier set, without looking through typedefs that may have
@@ -814,7 +814,7 @@ public:
   }
 
   /// Determine whether this type is const-qualified.
-  bool isConstQualified() const;
+  bool isConstQualified() const LLVM_READONLY;
 
   /// Determine whether this particular QualType instance has the
   /// "restrict" qualifier set, without looking through typedefs that may have
@@ -824,7 +824,7 @@ public:
   }
 
   /// Determine whether this type is restrict-qualified.
-  bool isRestrictQualified() const;
+  bool isRestrictQualified() const LLVM_READONLY;
 
   /// Determine whether this particular QualType instance has the
   /// "volatile" qualifier set, without looking through typedefs that may have
@@ -834,7 +834,7 @@ public:
   }
 
   /// Determine whether this type is volatile-qualified.
-  bool isVolatileQualified() const;
+  bool isVolatileQualified() const LLVM_READONLY;
 
   /// Determine whether this particular QualType instance has any
   /// qualifiers, without looking through any typedefs that might add
@@ -844,7 +844,7 @@ public:
   }
 
   /// Determine whether this type has any qualifiers.
-  bool hasQualifiers() const;
+  bool hasQualifiers() const LLVM_READONLY;
 
   /// Determine whether this particular QualType instance has any
   /// "non-fast" qualifiers, e.g., those that are stored in an ExtQualType
@@ -856,10 +856,10 @@ public:
   /// Retrieve the set of qualifiers local to this particular QualType
   /// instance, not including any qualifiers acquired through typedefs or
   /// other sugar.
-  Qualifiers getLocalQualifiers() const;
+  Qualifiers getLocalQualifiers() const LLVM_READONLY;
 
   /// Retrieve the set of qualifiers applied to this type.
-  Qualifiers getQualifiers() const;
+  Qualifiers getQualifiers() const LLVM_READONLY;
 
   /// Retrieve the set of CVR (const-volatile-restrict) qualifiers
   /// local to this particular QualType instance, not including any qualifiers
@@ -870,39 +870,39 @@ public:
 
   /// Retrieve the set of CVR (const-volatile-restrict) qualifiers
   /// applied to this type.
-  unsigned getCVRQualifiers() const;
+  unsigned getCVRQualifiers() const LLVM_READONLY;
 
   bool isConstant(const ASTContext& Ctx) const {
     return QualType::isConstant(*this, Ctx);
   }
 
   /// Determine whether this is a Plain Old Data (POD) type (C++ 3.9p10).
-  bool isPODType(const ASTContext &Context) const;
+  bool isPODType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Return true if this is a POD type according to the rules of the C++98
   /// standard, regardless of the current compilation's language.
-  bool isCXX98PODType(const ASTContext &Context) const;
+  bool isCXX98PODType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Return true if this is a POD type according to the more relaxed rules
   /// of the C++11 standard, regardless of the current compilation's language.
   /// (C++0x [basic.types]p9). Note that, unlike
   /// CXXRecordDecl::isCXX11StandardLayout, this takes DRs into account.
-  bool isCXX11PODType(const ASTContext &Context) const;
+  bool isCXX11PODType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Return true if this is a trivial type per (C++0x [basic.types]p9)
-  bool isTrivialType(const ASTContext &Context) const;
+  bool isTrivialType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Return true if this is a trivially copyable type (C++0x [basic.types]p9)
-  bool isTriviallyCopyableType(const ASTContext &Context) const;
+  bool isTriviallyCopyableType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Return true if this is a trivially relocatable type.
-  bool isTriviallyRelocatableType(const ASTContext &Context) const;
+  bool isTriviallyRelocatableType(const ASTContext &Context) const LLVM_READONLY;
 
   /// Returns true if it is a class and it might be dynamic.
-  bool mayBeDynamicClass() const;
+  bool mayBeDynamicClass() const LLVM_READONLY;
 
   /// Returns true if it is not a class or if the class might not be dynamic.
-  bool mayBeNotDynamicClass() const;
+  bool mayBeNotDynamicClass() const LLVM_READONLY;
 
   // Don't promise in the API that anything besides 'const' can be
   // easily added.
@@ -973,7 +973,7 @@ public:
     return T;
   }
 
-  QualType getCanonicalType() const;
+  QualType getCanonicalType() const LLVM_READONLY;
 
   /// Return this type with all of the instance-specific qualifiers
   /// removed, but without removing any qualifiers that may have been applied
@@ -1203,7 +1203,7 @@ public:
   }
 
   // true when Type is objc's weak and weak is enabled but ARC isn't.
-  bool isNonWeakInMRRWithObjCWeak(const ASTContext &Context) const;
+  bool isNonWeakInMRRWithObjCWeak(const ASTContext &Context) const LLVM_READONLY;
 
   enum PrimitiveDefaultInitializeKind {
     /// The type does not fall into any of the following categories. Note that
@@ -1229,7 +1229,7 @@ public:
   /// transitively containing this type to be non-trivial to default initialize
   /// and return the kind.
   PrimitiveDefaultInitializeKind
-  isNonTrivialToPrimitiveDefaultInitialize() const;
+  isNonTrivialToPrimitiveDefaultInitialize() const LLVM_READONLY;
 
   enum PrimitiveCopyKind {
     /// The type does not fall into any of the following categories. Note that
@@ -1262,7 +1262,7 @@ public:
   /// Check if this is a non-trivial type that would cause a C struct
   /// transitively containing this type to be non-trivial to copy and return the
   /// kind.
-  PrimitiveCopyKind isNonTrivialToPrimitiveCopy() const;
+  PrimitiveCopyKind isNonTrivialToPrimitiveCopy() const LLVM_READONLY;
 
   /// Check if this is a non-trivial type that would cause a C struct
   /// transitively containing this type to be non-trivial to destructively
@@ -1270,7 +1270,7 @@ public:
   /// move in which the source object is placed in a valid but unspecified state
   /// after it is moved, as opposed to a truly destructive move in which the
   /// source object is placed in an uninitialized state.
-  PrimitiveCopyKind isNonTrivialToPrimitiveDestructiveMove() const;
+  PrimitiveCopyKind isNonTrivialToPrimitiveDestructiveMove() const LLVM_READONLY;
 
   enum DestructionKind {
     DK_none,
@@ -1292,17 +1292,17 @@ public:
   /// default-initialize, which is a union that has a member that is non-trivial
   /// to default-initialize. If this returns true,
   /// isNonTrivialToPrimitiveDefaultInitialize returns PDIK_Struct.
-  bool hasNonTrivialToPrimitiveDefaultInitializeCUnion() const;
+  bool hasNonTrivialToPrimitiveDefaultInitializeCUnion() const LLVM_READONLY;
 
   /// Check if this is or contains a C union that is non-trivial to destruct,
   /// which is a union that has a member that is non-trivial to destruct. If
   /// this returns true, isDestructedType returns DK_nontrivial_c_struct.
-  bool hasNonTrivialToPrimitiveDestructCUnion() const;
+  bool hasNonTrivialToPrimitiveDestructCUnion() const LLVM_READONLY;
 
   /// Check if this is or contains a C union that is non-trivial to copy, which
   /// is a union that has a member that is non-trivial to copy. If this returns
   /// true, isNonTrivialToPrimitiveCopy returns PCK_Struct.
-  bool hasNonTrivialToPrimitiveCopyCUnion() const;
+  bool hasNonTrivialToPrimitiveCopyCUnion() const LLVM_READONLY;
 
   /// Determine whether expressions of the given type are forbidden
   /// from being lvalues in C.
@@ -1314,7 +1314,7 @@ public:
   /// The exact rule here is C99 6.3.2.1:
   ///   An lvalue is an expression with an object type or an incomplete
   ///   type other than void.
-  bool isCForbiddenLValueType() const;
+  bool isCForbiddenLValueType() const LLVM_READONLY;
 
   /// Substitute type arguments for the Objective-C type parameters used in the
   /// subject type.
@@ -1332,7 +1332,7 @@ public:
   /// \returns the resulting type.
   QualType substObjCTypeArgs(ASTContext &ctx,
                              ArrayRef<QualType> typeArgs,
-                             ObjCSubstitutionContext context) const;
+                             ObjCSubstitutionContext context) const LLVM_READONLY;
 
   /// Substitute type arguments from an object type for the Objective-C type
   /// parameters used in the subject type.
@@ -1356,13 +1356,13 @@ public:
   /// parameters with their corresponding arguments.
   QualType substObjCMemberType(QualType objectType,
                                const DeclContext *dc,
-                               ObjCSubstitutionContext context) const;
+                               ObjCSubstitutionContext context) const LLVM_READONLY;
 
   /// Strip Objective-C "__kindof" types from the given type.
-  QualType stripObjCKindOfType(const ASTContext &ctx) const;
+  QualType stripObjCKindOfType(const ASTContext &ctx) const LLVM_READONLY;
 
   /// Remove all qualifiers including _Atomic.
-  QualType getAtomicUnqualifiedType() const;
+  QualType getAtomicUnqualifiedType() const LLVM_READONLY;
 
 private:
   // These methods are implemented in a separate translation unit;
