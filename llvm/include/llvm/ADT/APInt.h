@@ -462,7 +462,7 @@ public:
   /// e.g. 0x01010101 satisfies isSplat(8).
   /// \param SplatSizeInBits The size of the pattern in bits. Must divide bit
   /// width without remainder.
-  bool isSplat(unsigned SplatSizeInBits) const;
+  bool isSplat(unsigned SplatSizeInBits) const LLVM_READONLY;
 
   /// \returns true if this APInt value is a sequence of \param numBits ones
   /// starting at the least significant bit with the remainder zero.
@@ -542,7 +542,7 @@ public:
   }
 
   /// Overload to compute a hash_code for an APInt value.
-  friend hash_code hash_value(const APInt &Arg);
+  friend hash_code hash_value(const APInt &Arg) LLVM_READONLY;
 
   /// This function returns a pointer to the internal storage of the APInt.
   /// This is useful for writing out the APInt in binary form without any
@@ -2273,7 +2273,7 @@ APInt ScaleBitMask(const APInt &A, unsigned NewBitWidth,
 
 // See friend declaration above. This additional declaration is required in
 // order to compile LLVM with IBM xlC compiler.
-hash_code hash_value(const APInt &Arg);
+hash_code hash_value(const APInt &Arg) LLVM_READONLY;
 
 /// StoreIntToMemory - Fills the StoreBytes bytes of memory starting from Dst
 /// with the integer held in IntVal.
@@ -2297,7 +2297,7 @@ template <> struct DenseMapInfo<APInt, void> {
     return V;
   }
 
-  static unsigned getHashValue(const APInt &Key);
+  static unsigned getHashValue(const APInt &Key) LLVM_READONLY;
 
   static bool isEqual(const APInt &LHS, const APInt &RHS) {
     return LHS.getBitWidth() == RHS.getBitWidth() && LHS == RHS;

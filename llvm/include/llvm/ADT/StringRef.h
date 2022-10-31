@@ -335,13 +335,13 @@ namespace llvm {
     ///
     /// \returns The index of the first occurrence of \p Str, or npos if not
     /// found.
-    [[nodiscard]] size_t find(StringRef Str, size_t From = 0) const;
+    [[nodiscard]] size_t find(StringRef Str, size_t From = 0) const LLVM_READONLY;
 
     /// Search for the first string \p Str in the string, ignoring case.
     ///
     /// \returns The index of the first occurrence of \p Str, or npos if not
     /// found.
-    [[nodiscard]] size_t find_insensitive(StringRef Str, size_t From = 0) const;
+    [[nodiscard]] size_t find_insensitive(StringRef Str, size_t From = 0) const LLVM_READONLY;
 
     /// Search for the last character \p C in the string.
     ///
@@ -913,7 +913,7 @@ namespace llvm {
           reinterpret_cast<const char *>(~static_cast<uintptr_t>(1)), 0);
     }
 
-    static unsigned getHashValue(StringRef Val);
+    static unsigned getHashValue(StringRef Val) LLVM_READONLY;
 
     static bool isEqual(StringRef LHS, StringRef RHS) {
       if (RHS.data() == getEmptyKey().data())
