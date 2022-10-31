@@ -105,9 +105,9 @@ public:
     return Kind >= FirstTypeAttr && Kind <= LastTypeAttr;
   }
 
-  static bool canUseAsFnAttr(AttrKind Kind);
-  static bool canUseAsParamAttr(AttrKind Kind);
-  static bool canUseAsRetAttr(AttrKind Kind);
+  static bool canUseAsFnAttr(AttrKind Kind) LLVM_READONLY;
+  static bool canUseAsParamAttr(AttrKind Kind) LLVM_READONLY;
+  static bool canUseAsRetAttr(AttrKind Kind) LLVM_READONLY;
 
 private:
   AttributeImpl *pImpl = nullptr;
@@ -167,54 +167,54 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Return true if the attribute is an Attribute::AttrKind type.
-  bool isEnumAttribute() const;
+  bool isEnumAttribute() const LLVM_READONLY;
 
   /// Return true if the attribute is an integer attribute.
-  bool isIntAttribute() const;
+  bool isIntAttribute() const LLVM_READONLY;
 
   /// Return true if the attribute is a string (target-dependent)
   /// attribute.
-  bool isStringAttribute() const;
+  bool isStringAttribute() const LLVM_READONLY;
 
   /// Return true if the attribute is a type attribute.
-  bool isTypeAttribute() const;
+  bool isTypeAttribute() const LLVM_READONLY;
 
   /// Return true if the attribute is any kind of attribute.
   bool isValid() const { return pImpl; }
 
   /// Return true if the attribute is present.
-  bool hasAttribute(AttrKind Val) const;
+  bool hasAttribute(AttrKind Val) const LLVM_READONLY;
 
   /// Return true if the target-dependent attribute is present.
-  bool hasAttribute(StringRef Val) const;
+  bool hasAttribute(StringRef Val) const LLVM_READONLY;
 
   /// Return the attribute's kind as an enum (Attribute::AttrKind). This
   /// requires the attribute to be an enum, integer, or type attribute.
-  Attribute::AttrKind getKindAsEnum() const;
+  Attribute::AttrKind getKindAsEnum() const LLVM_READONLY;
 
   /// Return the attribute's value as an integer. This requires that the
   /// attribute be an integer attribute.
-  uint64_t getValueAsInt() const;
+  uint64_t getValueAsInt() const LLVM_READONLY;
 
   /// Return the attribute's value as a boolean. This requires that the
   /// attribute be a string attribute.
-  bool getValueAsBool() const;
+  bool getValueAsBool() const LLVM_READONLY;
 
   /// Return the attribute's kind as a string. This requires the
   /// attribute to be a string attribute.
-  StringRef getKindAsString() const;
+  StringRef getKindAsString() const LLVM_READONLY;
 
   /// Return the attribute's value as a string. This requires the
   /// attribute to be a string attribute.
-  StringRef getValueAsString() const;
+  StringRef getValueAsString() const LLVM_READONLY;
 
   /// Return the attribute's value as a Type. This requires the attribute to be
   /// a type attribute.
-  Type *getValueAsType() const;
+  Type *getValueAsType() const LLVM_READONLY;
 
   /// Returns the alignment field of an attribute as a byte alignment
   /// value.
-  MaybeAlign getAlignment() const;
+  MaybeAlign getAlignment() const LLVM_READONLY;
 
   /// Returns the stack alignment field of an attribute as a byte
   /// alignment value.
@@ -222,30 +222,30 @@ public:
 
   /// Returns the number of dereferenceable bytes from the
   /// dereferenceable attribute.
-  uint64_t getDereferenceableBytes() const;
+  uint64_t getDereferenceableBytes() const LLVM_READONLY;
 
   /// Returns the number of dereferenceable_or_null bytes from the
   /// dereferenceable_or_null attribute.
-  uint64_t getDereferenceableOrNullBytes() const;
+  uint64_t getDereferenceableOrNullBytes() const LLVM_READONLY;
 
   /// Returns the argument numbers for the allocsize attribute.
-  std::pair<unsigned, Optional<unsigned>> getAllocSizeArgs() const;
+  std::pair<unsigned, Optional<unsigned>> getAllocSizeArgs() const LLVM_READONLY;
 
   /// Returns the minimum value for the vscale_range attribute.
-  unsigned getVScaleRangeMin() const;
+  unsigned getVScaleRangeMin() const LLVM_READONLY;
 
   /// Returns the maximum value for the vscale_range attribute or None when
   /// unknown.
-  Optional<unsigned> getVScaleRangeMax() const;
+  Optional<unsigned> getVScaleRangeMax() const LLVM_READONLY;
 
   // Returns the unwind table kind.
-  UWTableKind getUWTableKind() const;
+  UWTableKind getUWTableKind() const LLVM_READONLY;
 
   // Returns the allocator function kind.
-  AllocFnKind getAllocKind() const;
+  AllocFnKind getAllocKind() const LLVM_READONLY;
 
   /// Returns memory effects.
-  MemoryEffects getMemoryEffects() const;
+  MemoryEffects getMemoryEffects() const LLVM_READONLY;
 
   /// The Attribute is converted to a string of equivalent mnemonic. This
   /// is, presumably, for writing out the mnemonics for the assembly writer.
@@ -259,7 +259,7 @@ public:
   bool operator!=(Attribute A) const { return pImpl != A.pImpl; }
 
   /// Less-than operator. Useful for sorting the attributes list.
-  bool operator<(Attribute A) const;
+  bool operator<(Attribute A) const LLVM_READONLY;
 
   void Profile(FoldingSetNodeID &ID) const;
 
@@ -353,10 +353,10 @@ public:
   bool hasAttributes() const { return SetNode != nullptr; }
 
   /// Return true if the attribute exists in this set.
-  bool hasAttribute(Attribute::AttrKind Kind) const;
+  bool hasAttribute(Attribute::AttrKind Kind) const LLVM_READONLY;
 
   /// Return true if the attribute exists in this set.
-  bool hasAttribute(StringRef Kind) const;
+  bool hasAttribute(StringRef Kind) const LLVM_READONLY;
 
   /// Return the attribute object.
   Attribute getAttribute(Attribute::AttrKind Kind) const;
@@ -364,21 +364,21 @@ public:
   /// Return the target-dependent attribute object.
   Attribute getAttribute(StringRef Kind) const;
 
-  MaybeAlign getAlignment() const;
-  MaybeAlign getStackAlignment() const;
-  uint64_t getDereferenceableBytes() const;
-  uint64_t getDereferenceableOrNullBytes() const;
-  Type *getByValType() const;
-  Type *getStructRetType() const;
-  Type *getByRefType() const;
-  Type *getPreallocatedType() const;
-  Type *getInAllocaType() const;
-  Type *getElementType() const;
+  MaybeAlign getAlignment() const LLVM_READONLY;
+  MaybeAlign getStackAlignment() const LLVM_READONLY;
+  uint64_t getDereferenceableBytes() const LLVM_READONLY;
+  uint64_t getDereferenceableOrNullBytes() const LLVM_READONLY;
+  Type *getByValType() const LLVM_READONLY;
+  Type *getStructRetType() const LLVM_READONLY;
+  Type *getByRefType() const LLVM_READONLY;
+  Type *getPreallocatedType() const LLVM_READONLY;
+  Type *getInAllocaType() const LLVM_READONLY;
+  Type *getElementType() const LLVM_READONLY;
   Optional<std::pair<unsigned, Optional<unsigned>>> getAllocSizeArgs() const;
-  unsigned getVScaleRangeMin() const;
-  Optional<unsigned> getVScaleRangeMax() const;
-  UWTableKind getUWTableKind() const;
-  AllocFnKind getAllocKind() const;
+  unsigned getVScaleRangeMin() const LLVM_READONLY;
+  Optional<unsigned> getVScaleRangeMax() const LLVM_READONLY;
+  UWTableKind getUWTableKind() const LLVM_READONLY;
+  AllocFnKind getAllocKind() const LLVM_READONLY;
   std::string getAsString(bool InAttrGrp = false) const;
 
   /// Return true if this attribute set belongs to the LLVMContext.
@@ -748,13 +748,13 @@ public:
   AttributeSet getFnAttrs() const;
 
   /// Return true if the attribute exists at the given index.
-  bool hasAttributeAtIndex(unsigned Index, Attribute::AttrKind Kind) const;
+  bool hasAttributeAtIndex(unsigned Index, Attribute::AttrKind Kind) const LLVM_READONLY;
 
   /// Return true if the attribute exists at the given index.
-  bool hasAttributeAtIndex(unsigned Index, StringRef Kind) const;
+  bool hasAttributeAtIndex(unsigned Index, StringRef Kind) const LLVM_READONLY;
 
   /// Return true if attribute exists at the given index.
-  bool hasAttributesAtIndex(unsigned Index) const;
+  bool hasAttributesAtIndex(unsigned Index) const LLVM_READONLY;
 
   /// Return true if the attribute exists for the given argument
   bool hasParamAttr(unsigned ArgNo, Attribute::AttrKind Kind) const {
@@ -785,10 +785,10 @@ public:
   bool hasRetAttrs() const { return hasAttributesAtIndex(ReturnIndex); }
 
   /// Return true if the attribute exists for the function.
-  bool hasFnAttr(Attribute::AttrKind Kind) const;
+  bool hasFnAttr(Attribute::AttrKind Kind) const LLVM_READONLY;
 
   /// Return true if the attribute exists for the function.
-  bool hasFnAttr(StringRef Kind) const;
+  bool hasFnAttr(StringRef Kind) const LLVM_READONLY;
 
   /// Return true the attributes exist for the function.
   bool hasFnAttrs() const { return hasAttributesAtIndex(FunctionIndex); }
@@ -797,7 +797,7 @@ public:
   /// parameter or for the return value. If Index is not nullptr, the index
   /// of a parameter with the specified attribute is provided.
   bool hasAttrSomewhere(Attribute::AttrKind Kind,
-                        unsigned *Index = nullptr) const;
+                        unsigned *Index = nullptr) const LLVM_READONLY;
 
   /// Return the attribute object that exists at the given index.
   Attribute getAttributeAtIndex(unsigned Index, Attribute::AttrKind Kind) const;
@@ -826,63 +826,63 @@ public:
   }
 
   /// Return the alignment of the return value.
-  MaybeAlign getRetAlignment() const;
+  MaybeAlign getRetAlignment() const LLVM_READONLY;
 
   /// Return the alignment for the specified function parameter.
-  MaybeAlign getParamAlignment(unsigned ArgNo) const;
+  MaybeAlign getParamAlignment(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the stack alignment for the specified function parameter.
-  MaybeAlign getParamStackAlignment(unsigned ArgNo) const;
+  MaybeAlign getParamStackAlignment(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the byval type for the specified function parameter.
-  Type *getParamByValType(unsigned ArgNo) const;
+  Type *getParamByValType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the sret type for the specified function parameter.
-  Type *getParamStructRetType(unsigned ArgNo) const;
+  Type *getParamStructRetType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the byref type for the specified function parameter.
-  Type *getParamByRefType(unsigned ArgNo) const;
+  Type *getParamByRefType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the preallocated type for the specified function parameter.
-  Type *getParamPreallocatedType(unsigned ArgNo) const;
+  Type *getParamPreallocatedType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the inalloca type for the specified function parameter.
-  Type *getParamInAllocaType(unsigned ArgNo) const;
+  Type *getParamInAllocaType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Return the elementtype type for the specified function parameter.
-  Type *getParamElementType(unsigned ArgNo) const;
+  Type *getParamElementType(unsigned ArgNo) const LLVM_READONLY;
 
   /// Get the stack alignment of the function.
-  MaybeAlign getFnStackAlignment() const;
+  MaybeAlign getFnStackAlignment() const LLVM_READONLY;
 
   /// Get the stack alignment of the return value.
-  MaybeAlign getRetStackAlignment() const;
+  MaybeAlign getRetStackAlignment() const LLVM_READONLY;
 
   /// Get the number of dereferenceable bytes (or zero if unknown) of the return
   /// value.
-  uint64_t getRetDereferenceableBytes() const;
+  uint64_t getRetDereferenceableBytes() const LLVM_READONLY;
 
   /// Get the number of dereferenceable bytes (or zero if unknown) of an arg.
-  uint64_t getParamDereferenceableBytes(unsigned Index) const;
+  uint64_t getParamDereferenceableBytes(unsigned Index) const LLVM_READONLY;
 
   /// Get the number of dereferenceable_or_null bytes (or zero if unknown) of
   /// the return value.
-  uint64_t getRetDereferenceableOrNullBytes() const;
+  uint64_t getRetDereferenceableOrNullBytes() const LLVM_READONLY;
 
   /// Get the number of dereferenceable_or_null bytes (or zero if unknown) of an
   /// arg.
-  uint64_t getParamDereferenceableOrNullBytes(unsigned ArgNo) const;
+  uint64_t getParamDereferenceableOrNullBytes(unsigned ArgNo) const LLVM_READONLY;
 
   /// Get the unwind table kind requested for the function.
-  UWTableKind getUWTableKind() const;
+  UWTableKind getUWTableKind() const LLVM_READONLY;
 
-  AllocFnKind getAllocKind() const;
+  AllocFnKind getAllocKind() const LLVM_READONLY;
 
   /// Return the attributes at the index as a string.
   std::string getAsString(unsigned Index, bool InAttrGrp = false) const;
 
   /// Return true if this attribute list belongs to the LLVMContext.
-  bool hasParentContext(LLVMContext &C) const;
+  bool hasParentContext(LLVMContext &C) const LLVM_READONLY;
 
   //===--------------------------------------------------------------------===//
   // AttributeList Introspection
@@ -890,10 +890,10 @@ public:
 
   using iterator = const AttributeSet *;
 
-  iterator begin() const;
-  iterator end() const;
+  iterator begin() const LLVM_READONLY;
+  iterator end() const LLVM_READONLY;
 
-  unsigned getNumAttrSets() const;
+  unsigned getNumAttrSets() const LLVM_READONLY;
 
   // Implementation of indexes(). Produces iterators that wrap an index. Mostly
   // to hide the awkwardness of unsigned wrapping when iterating over valid
