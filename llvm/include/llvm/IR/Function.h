@@ -169,7 +169,7 @@ public:
   /// Returns the number of non-debug IR instructions in this function.
   /// This is equivalent to the sum of the sizes of each basic block contained
   /// within this function.
-  unsigned getInstructionCount() const;
+  unsigned getInstructionCount() const LLVM_READONLY;
 
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
@@ -181,7 +181,7 @@ public:
 
   /// getContext - Return a reference to the LLVMContext associated with this
   /// function.
-  LLVMContext &getContext() const;
+  LLVMContext &getContext() const LLVM_READONLY;
 
   /// isVarArg - Return true if this function takes a variable number of
   /// arguments.
@@ -216,12 +216,12 @@ public:
   /// isTargetIntrinsic - Returns true if this function is an intrinsic and the
   /// intrinsic is specific to a certain target. If this is not an intrinsic
   /// or a generic intrinsic, false is returned.
-  bool isTargetIntrinsic() const;
+  bool isTargetIntrinsic() const LLVM_READONLY;
 
   /// Returns true if the function is one of the "Constrained Floating-Point
   /// Intrinsics". Returns false if not, and returns false when
   /// getIntrinsicID() returns Intrinsic::not_intrinsic.
-  bool isConstrainedFPIntrinsic() const;
+  bool isConstrainedFPIntrinsic() const LLVM_READONLY;
 
   static Intrinsic::ID lookupIntrinsicID(StringRef Name);
 

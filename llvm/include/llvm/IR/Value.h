@@ -255,7 +255,7 @@ public:
   Type *getType() const { return VTy; }
 
   /// All values hold a context through their type.
-  LLVMContext &getContext() const;
+  LLVMContext &getContext() const LLVM_READONLY;
 
   // All values can potentially be named.
   bool hasName() const { return HasName; }

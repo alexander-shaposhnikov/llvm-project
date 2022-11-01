@@ -81,7 +81,7 @@ public:
   ~BasicBlock();
 
   /// Get the context in which this basic block lives.
-  LLVMContext &getContext() const;
+  LLVMContext &getContext() const LLVM_READONLY;
 
   /// Instruction iterators...
   using iterator = InstListType::iterator;
