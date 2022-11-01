@@ -90,7 +90,7 @@ public:
 
   /// Return true if there is an allocation size parameter to the allocation
   /// instruction that is not 1.
-  bool isArrayAllocation() const;
+  bool isArrayAllocation() const LLVM_READONLY;
 
   /// Get the number of elements allocated. For a simple allocation of a single
   /// element, this will return a constant 1 value.
@@ -109,7 +109,7 @@ public:
 
   /// Get allocation size in bits. Returns None if size can't be determined,
   /// e.g. in case of a VLA.
-  Optional<TypeSize> getAllocationSizeInBits(const DataLayout &DL) const;
+  Optional<TypeSize> getAllocationSizeInBits(const DataLayout &DL) const LLVM_READONLY;
 
   /// Return the type that is being allocated by the instruction.
   Type *getAllocatedType() const { return AllocatedType; }
@@ -1105,19 +1105,19 @@ public:
   /// Return true if all of the indices of this GEP are
   /// zeros.  If so, the result pointer and the first operand have the same
   /// value, just potentially different types.
-  bool hasAllZeroIndices() const;
+  bool hasAllZeroIndices() const LLVM_READONLY;
 
   /// Return true if all of the indices of this GEP are
   /// constant integers.  If so, the result pointer and the first operand have
   /// a constant offset between them.
-  bool hasAllConstantIndices() const;
+  bool hasAllConstantIndices() const LLVM_READONLY;
 
   /// Set or clear the inbounds flag on this GEP instruction.
   /// See LangRef.html for the meaning of inbounds on a getelementptr.
   void setIsInBounds(bool b = true);
 
   /// Determine whether the GEP has the inbounds flag.
-  bool isInBounds() const;
+  bool isInBounds() const LLVM_READONLY;
 
   /// Accumulate the constant address offset of this GEP if possible.
   ///
@@ -1256,7 +1256,7 @@ public:
 
   /// This is a static version that you can use without an instruction.
   /// Return the signed version of the predicate.
-  static Predicate getSignedPredicate(Predicate pred);
+  static Predicate getSignedPredicate(Predicate pred) LLVM_READONLY;
 
   /// For example, EQ->EQ, SLE->ULE, UGT->UGT, etc.
   /// @returns the predicate that would be the result if the operand were
