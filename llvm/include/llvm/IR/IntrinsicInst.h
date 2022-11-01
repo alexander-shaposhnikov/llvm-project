@@ -405,21 +405,21 @@ public:
   static Optional<unsigned> getVectorLengthParamPos(Intrinsic::ID IntrinsicID);
 
   /// The llvm.vp.* intrinsics for this instruction Opcode
-  static Intrinsic::ID getForOpcode(unsigned OC);
+  static Intrinsic::ID getForOpcode(unsigned OC) LLVM_READONLY;
 
   // Whether \p ID is a VP intrinsic ID.
-  static bool isVPIntrinsic(Intrinsic::ID);
+  static bool isVPIntrinsic(Intrinsic::ID) LLVM_READONLY;
 
   /// \return The mask parameter or nullptr.
-  Value *getMaskParam() const;
+  Value *getMaskParam() const LLVM_READONLY;
   void setMaskParam(Value *);
 
   /// \return The vector length parameter or nullptr.
-  Value *getVectorLengthParam() const;
+  Value *getVectorLengthParam() const LLVM_READONLY;
   void setVectorLengthParam(Value *);
 
   /// \return Whether the vector length param can be ignored.
-  bool canIgnoreVectorLengthParam() const;
+  bool canIgnoreVectorLengthParam() const LLVM_READONLY;
 
   /// \return The static element count (vector number of elements) the vector
   /// length parameter applies to.
@@ -427,15 +427,15 @@ public:
 
   /// \return The alignment of the pointer used by this load/store/gather or
   /// scatter.
-  MaybeAlign getPointerAlignment() const;
+  MaybeAlign getPointerAlignment() const LLVM_READONLY;
   // MaybeAlign setPointerAlignment(Align NewAlign); // TODO
 
   /// \return The pointer operand of this load,store, gather or scatter.
-  Value *getMemoryPointerParam() const;
+  Value *getMemoryPointerParam() const LLVM_READONLY;
   static Optional<unsigned> getMemoryPointerParamPos(Intrinsic::ID);
 
   /// \return The data (payload) operand of this store or scatter.
-  Value *getMemoryDataParam() const;
+  Value *getMemoryDataParam() const LLVM_READONLY;
   static Optional<unsigned> getMemoryDataParamPos(Intrinsic::ID);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
@@ -452,7 +452,7 @@ public:
   }
 
   // Equivalent non-predicated opcode
-  static Optional<unsigned> getFunctionalOpcodeForVP(Intrinsic::ID ID);
+  static Optional<unsigned> getFunctionalOpcodeForVP(Intrinsic::ID ID) LLVM_READONLY;
 };
 
 /// This represents vector predication reduction intrinsics.
@@ -512,11 +512,11 @@ public:
 /// This is the common base class for constrained floating point intrinsics.
 class ConstrainedFPIntrinsic : public IntrinsicInst {
 public:
-  bool isUnaryOp() const;
-  bool isTernaryOp() const;
-  Optional<RoundingMode> getRoundingMode() const;
-  Optional<fp::ExceptionBehavior> getExceptionBehavior() const;
-  bool isDefaultFPEnvironment() const;
+  bool isUnaryOp() const LLVM_READONLY;
+  bool isTernaryOp() const LLVM_READONLY;
+  Optional<RoundingMode> getRoundingMode() const LLVM_READONLY;
+  Optional<fp::ExceptionBehavior> getExceptionBehavior() const LLVM_READONLY;
+  bool isDefaultFPEnvironment() const LLVM_READONLY;
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
   static bool classof(const IntrinsicInst *I);
@@ -528,7 +528,7 @@ public:
 /// Constrained floating point compare intrinsics.
 class ConstrainedFPCmpIntrinsic : public ConstrainedFPIntrinsic {
 public:
-  FCmpInst::Predicate getPredicate() const;
+  FCmpInst::Predicate getPredicate() const LLVM_READONLY;
   bool isSignaling() const {
     return getIntrinsicID() == Intrinsic::experimental_constrained_fcmps;
   }
@@ -668,13 +668,13 @@ public:
   Value *getRHS() const { return const_cast<Value *>(getArgOperand(1)); }
 
   /// Returns the binary operation underlying the intrinsic.
-  Instruction::BinaryOps getBinaryOp() const;
+  Instruction::BinaryOps getBinaryOp() const LLVM_READONLY;
 
   /// Whether the intrinsic is signed or unsigned.
-  bool isSigned() const;
+  bool isSigned() const LLVM_READONLY;
 
   /// Returns one of OBO::NoSignedWrap or OBO::NoUnsignedWrap.
-  unsigned getNoWrapKind() const;
+  unsigned getNoWrapKind() const LLVM_READONLY;
 };
 
 /// Represents an op.with.overflow intrinsic.

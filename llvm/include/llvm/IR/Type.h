@@ -196,7 +196,7 @@ public:
   bool isIntegerTy() const { return getTypeID() == IntegerTyID; }
 
   /// Return true if this is an IntegerType of the given width.
-  bool isIntegerTy(unsigned Bitwidth) const;
+  bool isIntegerTy(unsigned Bitwidth) const LLVM_READONLY;
 
   /// Return true if this is an integer type or a vector of integer types.
   bool isIntOrIntVectorTy() const { return getScalarType()->isIntegerTy(); }
@@ -237,11 +237,11 @@ public:
   /// type 'Ty'. For example, i8* to i32*. BitCasts are valid for types of the
   /// same size only where no re-interpretation of the bits is done.
   /// Determine if this type could be losslessly bitcast to Ty
-  bool canLosslesslyBitCastTo(Type *Ty) const;
+  bool canLosslesslyBitCastTo(Type *Ty) const LLVM_READONLY;
 
   /// Return true if this type is empty, that is, it has no elements or all of
   /// its elements are empty.
-  bool isEmptyTy() const;
+  bool isEmptyTy() const LLVM_READONLY;
 
   /// Return true if the type is "first class", meaning it is a valid type for a
   /// Value.

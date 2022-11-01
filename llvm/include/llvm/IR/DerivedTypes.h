@@ -115,10 +115,10 @@ public:
   static FunctionType *get(Type *Result, bool isVarArg);
 
   /// Return true if the specified type is valid as a return type.
-  static bool isValidReturnType(Type *RetTy);
+  static bool isValidReturnType(Type *RetTy) LLVM_READONLY;
 
   /// Return true if the specified type is valid as an argument type.
-  static bool isValidArgumentType(Type *ArgTy);
+  static bool isValidArgumentType(Type *ArgTy) LLVM_READONLY;
 
   bool isVarArg() const { return getSubclassData()!=0; }
   Type *getReturnType() const { return ContainedTys[0]; }
@@ -321,7 +321,7 @@ public:
   }
 
   /// Return true if this is layout identical to the specified struct.
-  bool isLayoutIdentical(StructType *Other) const;
+  bool isLayoutIdentical(StructType *Other) const LLVM_READONLY;
 
   /// Random access to the elements
   unsigned getNumElements() const { return NumContainedTys; }
@@ -373,7 +373,7 @@ public:
   static ArrayType *get(Type *ElementType, uint64_t NumElements);
 
   /// Return true if the specified type is valid as a element type.
-  static bool isValidElementType(Type *ElemTy);
+  static bool isValidElementType(Type *ElemTy) LLVM_READONLY;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast.
   static bool classof(const Type *T) {
@@ -508,11 +508,11 @@ public:
   }
 
   /// Return true if the specified type is valid as a element type.
-  static bool isValidElementType(Type *ElemTy);
+  static bool isValidElementType(Type *ElemTy) LLVM_READONLY;
 
   /// Return an ElementCount instance to represent the (possibly scalable)
   /// number of elements in the vector.
-  inline ElementCount getElementCount() const;
+  inline ElementCount getElementCount() const LLVM_READONLY;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast.
   static bool classof(const Type *T) {
@@ -673,10 +673,10 @@ public:
   bool isOpaque() const { return !PointeeTy; }
 
   /// Return true if the specified type is valid as a element type.
-  static bool isValidElementType(Type *ElemTy);
+  static bool isValidElementType(Type *ElemTy) LLVM_READONLY;
 
   /// Return true if we can load or store from a pointer to this type.
-  static bool isLoadableOrStorableType(Type *ElemTy);
+  static bool isLoadableOrStorableType(Type *ElemTy) LLVM_READONLY;
 
   /// Return the address space of the Pointer type.
   inline unsigned getAddressSpace() const { return getSubclassData(); }

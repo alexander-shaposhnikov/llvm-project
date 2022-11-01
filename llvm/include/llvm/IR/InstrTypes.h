@@ -853,7 +853,7 @@ public:
   /// This is a static version that you can use without an instruction
   /// available.
   /// Return the predicate as if the operands were swapped.
-  static Predicate getSwappedPredicate(Predicate pred);
+  static Predicate getSwappedPredicate(Predicate pred) LLVM_READONLY;
 
   /// This is a static version that you can use without an instruction
   /// available.
@@ -982,7 +982,7 @@ public:
   /// For example, SLT->ULT, ULT->SLT, SLE->ULE, ULE->SLE, EQ->Failed assert
   /// @returns the unsigned version of the signed predicate pred or
   ///          the signed version of the signed predicate pred.
-  static Predicate getFlippedSignednessPredicate(Predicate pred);
+  static Predicate getFlippedSignednessPredicate(Predicate pred) LLVM_READONLY;
 
   /// For example, SLT->ULT, ULT->SLT, SLE->ULE, ULE->SLE, EQ->Failed assert
   /// @returns the unsigned version of the signed predicate pred or
