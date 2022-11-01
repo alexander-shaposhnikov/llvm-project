@@ -627,14 +627,14 @@ public:
   /// logic, this method is provided.
   /// @returns true iff the cast has only integral typed operand and dest type.
   /// Determine if this is an integer-only cast.
-  bool isIntegerCast() const;
+  bool isIntegerCast() const LLVM_READONLY;
 
   /// A lossless cast is one that does not alter the basic value. It implies
   /// a no-op cast but is more stringent, preventing things like int->float,
   /// long->double, or int->ptr.
   /// @returns true iff the cast is lossless.
   /// Determine if this is a lossless cast.
-  bool isLosslessCast() const;
+  bool isLosslessCast() const LLVM_READONLY;
 
   /// A no-op cast is one that can be effected without changing any bits.
   /// It implies that the source and destination types are the same size. The
@@ -821,7 +821,7 @@ public:
     return P >= FIRST_ICMP_PREDICATE && P <= LAST_ICMP_PREDICATE;
   }
 
-  static StringRef getPredicateName(Predicate P);
+  static StringRef getPredicateName(Predicate P) LLVM_READONLY;
 
   bool isFPPredicate() const { return isFPPredicate(getPredicate()); }
   bool isIntPredicate() const { return isIntPredicate(getPredicate()); }
@@ -838,7 +838,7 @@ public:
   ///              OEQ -> UNE, UGT -> OLE, OLT -> UGE, etc.
   /// @returns the inverse predicate for predicate provided in \p pred.
   /// Return the inverse of a given predicate
-  static Predicate getInversePredicate(Predicate pred);
+  static Predicate getInversePredicate(Predicate pred) LLVM_READONLY;
 
   /// For example, EQ->EQ, SLE->SGE, ULT->UGT,
   ///              OEQ->OEQ, ULE->UGE, OLT->OGT, etc.
@@ -858,7 +858,7 @@ public:
   /// This is a static version that you can use without an instruction
   /// available.
   /// @returns true if the comparison predicate is strict, false otherwise.
-  static bool isStrictPredicate(Predicate predicate);
+  static bool isStrictPredicate(Predicate predicate) LLVM_READONLY;
 
   /// @returns true if the comparison predicate is strict, false otherwise.
   /// Determine if this instruction is using an strict comparison predicate.
@@ -867,7 +867,7 @@ public:
   /// This is a static version that you can use without an instruction
   /// available.
   /// @returns true if the comparison predicate is non-strict, false otherwise.
-  static bool isNonStrictPredicate(Predicate predicate);
+  static bool isNonStrictPredicate(Predicate predicate) LLVM_READONLY;
 
   /// @returns true if the comparison predicate is non-strict, false otherwise.
   /// Determine if this instruction is using an non-strict comparison predicate.
@@ -926,12 +926,12 @@ public:
 
   /// This is just a convenience that dispatches to the subclasses.
   /// Determine if this CmpInst is commutative.
-  bool isCommutative() const;
+  bool isCommutative() const LLVM_READONLY;
 
   /// Determine if this is an equals/not equals predicate.
   /// This is a static version that you can use without an instruction
   /// available.
-  static bool isEquality(Predicate pred);
+  static bool isEquality(Predicate pred) LLVM_READONLY;
 
   /// Determine if this is an equals/not equals predicate.
   bool isEquality() const { return isEquality(getPredicate()); }
@@ -957,7 +957,7 @@ public:
   /// For example, ULT->SLT, ULE->SLE, UGT->SGT, UGE->SGE, SLT->Failed assert
   /// @returns the signed version of the unsigned predicate pred.
   /// return the signed version of a predicate
-  static Predicate getSignedPredicate(Predicate pred);
+  static Predicate getSignedPredicate(Predicate pred) LLVM_READONLY;
 
   /// For example, ULT->SLT, ULE->SLE, UGT->SGT, UGE->SGE, SLT->Failed assert
   /// @returns the signed version of the predicate for this instruction (which
@@ -969,7 +969,7 @@ public:
 
   /// For example, SLT->ULT, SLE->ULE, SGT->UGT, SGE->UGE, ULT->Failed assert
   /// @returns the unsigned version of the signed predicate pred.
-  static Predicate getUnsignedPredicate(Predicate pred);
+  static Predicate getUnsignedPredicate(Predicate pred) LLVM_READONLY;
 
   /// For example, SLT->ULT, SLE->ULE, SGT->UGT, SGE->UGE, ULT->Failed assert
   /// @returns the unsigned version of the predicate for this instruction (which
@@ -1005,31 +1005,31 @@ public:
 
   /// @returns true if the predicate is unsigned, false otherwise.
   /// Determine if the predicate is an unsigned operation.
-  static bool isUnsigned(Predicate predicate);
+  static bool isUnsigned(Predicate predicate) LLVM_READONLY;
 
   /// @returns true if the predicate is signed, false otherwise.
   /// Determine if the predicate is an signed operation.
-  static bool isSigned(Predicate predicate);
+  static bool isSigned(Predicate predicate) LLVM_READONLY;
 
   /// Determine if the predicate is an ordered operation.
-  static bool isOrdered(Predicate predicate);
+  static bool isOrdered(Predicate predicate) LLVM_READONLY;
 
   /// Determine if the predicate is an unordered operation.
-  static bool isUnordered(Predicate predicate);
+  static bool isUnordered(Predicate predicate) LLVM_READONLY;
 
   /// Determine if the predicate is true when comparing a value with itself.
-  static bool isTrueWhenEqual(Predicate predicate);
+  static bool isTrueWhenEqual(Predicate predicate) LLVM_READONLY;
 
   /// Determine if the predicate is false when comparing a value with itself.
-  static bool isFalseWhenEqual(Predicate predicate);
+  static bool isFalseWhenEqual(Predicate predicate) LLVM_READONLY;
 
   /// Determine if Pred1 implies Pred2 is true when two compares have matching
   /// operands.
-  static bool isImpliedTrueByMatchingCmp(Predicate Pred1, Predicate Pred2);
+  static bool isImpliedTrueByMatchingCmp(Predicate Pred1, Predicate Pred2) LLVM_READONLY;
 
   /// Determine if Pred1 implies Pred2 is false when two compares have matching
   /// operands.
-  static bool isImpliedFalseByMatchingCmp(Predicate Pred1, Predicate Pred2);
+  static bool isImpliedFalseByMatchingCmp(Predicate Pred1, Predicate Pred2) LLVM_READONLY;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
   static bool classof(const Instruction *I) {
@@ -1401,7 +1401,7 @@ public:
   }
 
   /// Return true if the callsite is an indirect call.
-  bool isIndirectCall() const;
+  bool isIndirectCall() const LLVM_READONLY;
 
   /// Determine whether the passed iterator points to the callee operand's Use.
   bool isCallee(Value::const_user_iterator UI) const {
@@ -1419,15 +1419,15 @@ public:
 
   /// Tests if this call site must be tail call optimized. Only a CallInst can
   /// be tail call optimized.
-  bool isMustTailCall() const;
+  bool isMustTailCall() const LLVM_READONLY;
 
   /// Tests if this call site is marked as a tail call.
-  bool isTailCall() const;
+  bool isTailCall() const LLVM_READONLY;
 
   /// Returns the intrinsic ID of the intrinsic called or
   /// Intrinsic::not_intrinsic if the called function is not an intrinsic, or if
   /// this is an indirect call.
-  Intrinsic::ID getIntrinsicID() const;
+  Intrinsic::ID getIntrinsicID() const LLVM_READONLY;
 
   void setCalledOperand(Value *V) { Op<CalledOperandOpEndIdx>() = V; }
 
