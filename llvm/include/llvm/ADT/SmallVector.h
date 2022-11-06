@@ -413,16 +413,34 @@ protected:
   }
 
 public:
+
+  template <class Si>
+  __attribute__((always_inline))
+  static void noalias_helper(const T* EltPtr, T* __restrict Dst, Si* __restrict Size) {
+    ::new ((void *)Dst) T(*EltPtr);
+    *Size += 1;
+  }
+
+  template <class Si>
+  __attribute__((always_inline))
+  static void noalias_helper_move(T* EltPtr, T* __restrict Dst, Si* __restrict Size) {
+    ::new ((void *)Dst) T(::std::move(*EltPtr));
+    *Size += 1;
+  }
+
+
   void push_back(const T &Elt) {
     const T *EltPtr = reserveForParamAndGetAddress(Elt);
-    ::new ((void *)this->end()) T(*EltPtr);
-    this->set_size(this->size() + 1);
+    noalias_helper(EltPtr, this->end(), &this->Size);
+    //::new ((void *)this->end()) T(*EltPtr);
+    //this->set_size(this->size() + 1);
   }
 
   void push_back(T &&Elt) {
     T *EltPtr = reserveForParamAndGetAddress(Elt);
-    ::new ((void *)this->end()) T(::std::move(*EltPtr));
-    this->set_size(this->size() + 1);
+    noalias_helper_move(EltPtr, this->end(), &this->Size);
+    //::new ((void *)this->end()) T(::std::move(*EltPtr));
+    //this->set_size(this->size() + 1);
   }
 
   void pop_back() {
@@ -938,12 +956,20 @@ public:
     insert(I, IL.begin(), IL.end());
   }
 
+  template <class Si, class... ArgTypes>
+  __attribute__((always_inline))
+  static void noalias_helper_variadic(T* __restrict Dst, Si* __restrict Size, ArgTypes &&... Args) {
+    ::new ((void *)Dst) T(std::forward<ArgTypes>(Args)...);
+    *Size += 1;
+  }
+
+
   template <typename... ArgTypes> reference emplace_back(ArgTypes &&... Args) {
     if (LLVM_UNLIKELY(this->size() >= this->capacity()))
       return this->growAndEmplaceBack(std::forward<ArgTypes>(Args)...);
-
-    ::new ((void *)this->end()) T(std::forward<ArgTypes>(Args)...);
-    this->set_size(this->size() + 1);
+    noalias_helper_variadic(this->end(), &this->Size, std::forward<ArgTypes>(Args)...);
+    //::new ((void *)this->end()) T(std::forward<ArgTypes>(Args)...);
+    //this->set_size(this->size() + 1);
     return this->back();
   }
 
