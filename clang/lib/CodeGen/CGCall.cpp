@@ -2453,6 +2453,14 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
             .getAsAlign();
     Attrs.addAlignmentAttr(Alignment);
 
+    if (auto FD = dyn_cast_or_null<FunctionDecl>(TargetDecl)) {
+      const AttributedType *AT = dyn_cast_or_null<AttributedType>(FD->getType());
+      if (isa<CXXMethodDecl>(FD)) {
+        llvm::errs() << "shal1t7: found (3)!!!\n";
+        Attrs.addAttribute(llvm::Attribute::NoCapture);
+      }
+    }
+
     ArgAttrs[IRArgs.first] = llvm::AttributeSet::get(getLLVMContext(), Attrs);
   }
 
