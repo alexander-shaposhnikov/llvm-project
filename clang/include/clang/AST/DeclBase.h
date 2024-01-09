@@ -443,7 +443,7 @@ public:
   SourceLocation getLocation() const { return Loc; }
   void setLocation(SourceLocation L) { Loc = L; }
 
-  Kind getKind() const { return static_cast<Kind>(DeclKind); }
+  Kind getKind() const LLVM_READONLY { return static_cast<Kind>(DeclKind); }
   const char *getDeclKindName() const;
 
   Decl *getNextDeclInContext() { return NextInContextAndBits.getPointer(); }

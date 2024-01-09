@@ -529,7 +529,7 @@ public:
   /// # there are more possible values for the value type than in ValueTy enum.
   /// # the InstructionVal enumerator must be the highest valued enumerator in
   ///   the ValueTy enum.
-  unsigned getValueID() const {
+  unsigned getValueID() const LLVM_READONLY {
     return SubclassID;
   }
 
