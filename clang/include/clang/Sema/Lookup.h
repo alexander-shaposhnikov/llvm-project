@@ -790,10 +790,17 @@ private:
 
   // Results.
   LookupResultKind ResultKind = NotFound;
+  UnresolvedSet<8> Decls;
+  SourceRange NameContextRange;
+  bool DiagnoseAccess = false;
+  bool DiagnoseAmbiguous = false;
+
+
+
   // ill-defined unless ambiguous. Still need to be initialized it will be
   // copied/moved.
   AmbiguityKind Ambiguity = {};
-  UnresolvedSet<8> Decls;
+  //UnresolvedSet<8> Decls;
   CXXBasePaths *Paths = nullptr;
   CXXRecordDecl *NamingClass = nullptr;
   QualType BaseObjectType;
@@ -801,7 +808,7 @@ private:
   // Parameters.
   Sema *SemaPtr;
   DeclarationNameInfo NameInfo;
-  SourceRange NameContextRange;
+  //SourceRange NameContextRange;
   Sema::LookupNameKind LookupKind;
   unsigned IDNS = 0; // set by configure()
 
@@ -812,8 +819,8 @@ private:
   ///   are present
   bool HideTags = true;
 
-  bool DiagnoseAccess = false;
-  bool DiagnoseAmbiguous = false;
+  //bool DiagnoseAccess = false;
+  //bool DiagnoseAmbiguous = false;
 
   /// True if we should allow hidden declarations to be 'visible'.
   bool AllowHidden = false;
