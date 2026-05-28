@@ -61,6 +61,7 @@ add_compiler_rt_component(profile)
 
 set(PROFILE_SOURCES
   InstrProfiling.c
+  InstrProfilingCache.c
   InstrProfilingInternal.c
   InstrProfilingBuffer.c
   InstrProfilingMerge.c

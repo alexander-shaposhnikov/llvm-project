@@ -2,6 +2,7 @@ add_llvm_component_library(LLVMInstrumentation
   AddressSanitizer.cpp
   AllocToken.cpp
   BoundsChecking.cpp
+  CacheProfiling.cpp
   CGProfile.cpp
   ControlHeightReduction.cpp
   DataFlowSanitizer.cpp
