@@ -21,6 +21,7 @@
 #include "llvm/Analysis/CtxProfAnalysis.h"
 #include "llvm/Analysis/FunctionPropertiesAnalysis.h"
 #include "llvm/Analysis/GlobalsModRef.h"
+#include "llvm/Analysis/IPModRef.h"
 #include "llvm/Analysis/InlineAdvisor.h"
 #include "llvm/Analysis/InstCount.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
@@ -199,6 +200,10 @@ static cl::opt<bool> EnablePostPGOLoopRotation(
 static cl::opt<bool> EnableGlobalAnalyses(
     "enable-global-analyses", cl::init(true), cl::Hidden,
     cl::desc("Enable inter-procedural analyses"));
+
+static cl::opt<bool> EnableIPModRefAA(
+    "enable-ipmodref-aa", cl::init(false), cl::Hidden,
+    cl::desc("Enable the interprocedural mod/ref alias analysis (IPModRef)"));
 
 static cl::opt<bool> RunPartialInlining("enable-partial-inlining",
                                         cl::init(false), cl::Hidden,
@@ -990,6 +995,11 @@ PassBuilder::buildInlinerPipeline(OptimizationLevel Level,
     MIWP.addModulePass(RequireAnalysisPass<GlobalsAA, Module>());
     // Invalidate AAManager so it can be recreated and pick up the newly
     // available GlobalsAA.
+    MIWP.addModulePass(
+        createModuleToFunctionPassAdaptor(InvalidateAnalysisPass<AAManager>()));
+  }
+  if (EnableIPModRefAA) {
+    MIWP.addModulePass(RequireAnalysisPass<IPModRef, Module>());
     MIWP.addModulePass(
         createModuleToFunctionPassAdaptor(InvalidateAnalysisPass<AAManager>()));
   }
@@ -2239,6 +2249,11 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
     MPM.addPass(
         createModuleToFunctionPassAdaptor(InvalidateAnalysisPass<AAManager>()));
   }
+  if (EnableIPModRefAA) {
+    MPM.addPass(RequireAnalysisPass<IPModRef, Module>());
+    MPM.addPass(
+        createModuleToFunctionPassAdaptor(InvalidateAnalysisPass<AAManager>()));
+  }
 
   FunctionPassManager MainFPM;
   MainFPM.addPass(createFunctionToLoopPassAdaptor(
@@ -2514,6 +2529,11 @@ AAManager PassBuilder::buildDefaultAAPipeline() {
   // results from `GlobalsAA` through a readonly proxy.
   if (EnableGlobalAnalyses)
     AA.registerModuleAnalysis<GlobalsAA>();
+
+  // Interprocedural mod/ref analysis (port of GCC IPA-modref). Like GlobalsAA
+  // it is a module analysis queried through a cached proxy.
+  if (EnableIPModRefAA)
+    AA.registerModuleAnalysis<IPModRef>();
 
   // Add target-specific alias analyses.
   if (TM)

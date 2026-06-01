@@ -1,0 +1,24 @@
+; free-like: a callee calls an argmem+inaccessible readwrite function on q and
+; writes p[0]. The call's effect is bounded to q (+invisible heap metadata), so
+; a reload of p[1] (noalias p,q) folds.
+; RUN: opt < %s -aa-pipeline=basic-aa,ip-modref-aa -passes='require<ip-modref-aa>,gvn' -S | FileCheck %s
+
+declare void @ext_free(ptr) memory(argmem: readwrite, inaccessiblemem: readwrite)
+
+define i64 @test(ptr noalias %p, ptr noalias %q, i64 %v) {
+; CHECK-LABEL: @test(
+; CHECK:         call void @callee(
+; CHECK-NOT:     load i64, ptr %p1
+; CHECK:         ret i64 %v
+entry:
+  %p1 = getelementptr inbounds i64, ptr %p, i64 1
+  store i64 %v, ptr %p1
+  call void @callee(ptr %p, ptr %q)
+  %r = load i64, ptr %p1
+  ret i64 %r
+}
+define void @callee(ptr %p, ptr %q) {
+  call void @ext_free(ptr %q)
+  store i64 0, ptr %p
+  ret void
+}

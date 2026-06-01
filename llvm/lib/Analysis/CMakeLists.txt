@@ -84,6 +84,7 @@ add_llvm_component_library(LLVMAnalysis
   GuardUtils.cpp
   HashRecognize.cpp
   HeatUtils.cpp
+  IPModRef.cpp
   IR2Vec.cpp
   IRSimilarityIdentifier.cpp
   IVDescriptors.cpp

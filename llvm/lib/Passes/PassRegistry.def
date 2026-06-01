@@ -45,6 +45,7 @@ MODULE_ANALYSIS("verify", VerifierAnalysis())
   MODULE_ANALYSIS(NAME, CREATE_PASS)
 #endif
 MODULE_ALIAS_ANALYSIS("globals-aa", GlobalsAA())
+MODULE_ALIAS_ANALYSIS("ip-modref-aa", IPModRef())
 #undef MODULE_ALIAS_ANALYSIS
 #undef MODULE_ANALYSIS
 
@@ -101,6 +102,7 @@ MODULE_PASS("insert-gcov-profiling", GCOVProfilerPass())
 MODULE_PASS("instrprof", InstrProfilingLoweringPass())
 MODULE_PASS("ctx-instr-lower", PGOCtxProfLoweringPass())
 MODULE_PASS("print<ctx-prof-analysis>", CtxProfAnalysisPrinterPass(errs()))
+MODULE_PASS("print<ip-modref>", IPModRefPrinterPass(errs()))
 MODULE_PASS("invalidate<all>", InvalidateAllAnalysesPass())
 MODULE_PASS("instrumentor", InstrumentorPass())
 MODULE_PASS("iroutliner", IROutlinerPass())
