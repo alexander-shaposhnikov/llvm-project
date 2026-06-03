@@ -72,6 +72,9 @@ STATISTIC(NumImportedGlobalVars,
 STATISTIC(NumImportedModules, "Number of modules imported from");
 STATISTIC(NumDeadSymbols, "Number of dead stripped symbols in index");
 STATISTIC(NumLiveSymbols, "Number of live symbols in index");
+STATISTIC(NumThinLTOAutoHideExact,
+          "Number of auto-hidden prevailing ODR functions promoted to exact "
+          "dso_local by -thinlto-autohide-exact");
 
 namespace llvm {
 extern cl::opt<bool> AlwaysRenamePromotedLocals;
@@ -1707,6 +1710,18 @@ bool llvm::convertToDeclaration(GlobalValue &GV) {
   return true;
 }
 
+// EXPERIMENT: after symbol resolution the prevailing ODR copy is already
+// chosen, and canAutoHide proves it is whole-program, unnamed_addr and not
+// preserved -- so no other copy can interpose it. With this flag, promote such
+// an auto-hidden prevailing copy to an EXACT dso_local definition so the
+// backend's FunctionAttrs/IPModRef can (re-)infer attributes on it (the
+// per-TU summary flag is "no" because the copy was linkonce_odr at summary
+// time). Kept External so cross-module references still resolve in ThinLTO.
+static cl::opt<bool> ThinLTOAutoHideExact(
+    "thinlto-autohide-exact", cl::Hidden, cl::init(false),
+    cl::desc("Promote auto-hidden prevailing ODR copies to exact dso_local "
+             "definitions post-resolution so attribute inference can run"));
+
 void llvm::thinLTOFinalizeInModule(Module &TheModule,
                                    const GVSummaryMapTy &DefinedGlobals,
                                    bool PropagateAttrs) {
@@ -1778,6 +1793,13 @@ void llvm::thinLTOFinalizeInModule(Module &TheModule,
           GS->second->canAutoHide()) {
         assert(GV.canBeOmittedFromSymbolTable());
         GV.setVisibility(GlobalValue::HiddenVisibility);
+        if (ThinLTOAutoHideExact && isa<Function>(GV)) {
+          // Candidate already picked + uninterposable => make it exact so
+          // FunctionAttrs/IPModRef will analyze it in this backend.
+          GV.setDSOLocal(true);
+          NewLinkage = GlobalValue::ExternalLinkage;
+          ++NumThinLTOAutoHideExact;
+        }
       }
 
       LLVM_DEBUG(dbgs() << "ODR fixing up linkage for `" << GV.getName()

@@ -268,6 +268,14 @@ MemoryEffects llvm::computeFunctionBodyMemoryAccess(Function &F,
   return checkFunctionMemoryAccess(F, /*ThisBody=*/true, AAR, {}).first;
 }
 
+/// DEBUG: -fnattrs-log-linkage prints, for each function FunctionAttrs sees,
+/// its linkage/exactness at that moment and the memory effect inferred. Lets us
+/// observe empirically whether (Thin)LTO post-resolution makes a linkonce_odr
+/// definition analyzable (exact) so attribute inference fires on it.
+static cl::opt<bool> FnAttrsLogLinkage(
+    "fnattrs-log-linkage", cl::Hidden, cl::init(false),
+    cl::desc("Log each function's linkage/exactness + inferred memory effect"));
+
 /// Deduce readonly/readnone/writeonly attributes for the SCC.
 template <typename AARGetterT>
 static void addMemoryAttrs(const SCCNodeSet &SCCNodes, AARGetterT &&AARGetter,
@@ -280,6 +288,11 @@ static void addMemoryAttrs(const SCCNodeSet &SCCNodes, AARGetterT &&AARGetter,
     // Non-exact function definitions may not be selected at link time, and an
     // alternative version that writes to memory may be selected.  See the
     // comment on GlobalValue::isDefinitionExact for more details.
+    if (FnAttrsLogLinkage)
+      errs() << "[FNATTRS-DBG] consider '" << F->getName()
+             << "' linkage#=" << (unsigned)F->getLinkage()
+             << " exact=" << F->hasExactDefinition()
+             << " interposable=" << F->isInterposable() << "\n";
     auto [FnME, FnRecursiveArgME] =
         checkFunctionMemoryAccess(*F, F->hasExactDefinition(), AAR, SCCNodes);
     ME |= FnME;
@@ -298,6 +311,12 @@ static void addMemoryAttrs(const SCCNodeSet &SCCNodes, AARGetterT &&AARGetter,
     MemoryEffects OldME = F->getMemoryEffects();
     MemoryEffects NewME = ME & OldME;
     if (NewME != OldME) {
+      if (FnAttrsLogLinkage)
+        errs() << "[FNATTRS-DBG] INFER memory on '" << F->getName()
+               << "': onlyReads=" << NewME.onlyReadsMemory()
+               << " doesNotAccessMem=" << NewME.doesNotAccessMemory()
+               << " onlyAccessesArgMem=" << NewME.onlyAccessesArgPointees()
+               << "\n";
       ++NumMemoryAttr;
       F->setMemoryEffects(NewME);
       // Remove conflicting writable attributes.
