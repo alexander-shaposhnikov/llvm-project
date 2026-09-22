@@ -80,6 +80,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Triple.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -2138,6 +2139,13 @@ static bool canConvertValue(const DataLayout &DL, Type *OldTy, Type *NewTy,
   return true;
 }
 
+/// Return true if \p NumElements is a valid vector component count in
+/// standard SPIR-V (2, 3, 4, 8, or 16; see SPIRVLegalizerInfo.cpp).
+static bool isValidSPIRVVectorSize(uint64_t NumElements) {
+  return NumElements >= 2 && NumElements <= 16 &&
+         (NumElements <= 4 || isPowerOf2_64(NumElements));
+}
+
 /// Test whether the given slice use can be promoted to a vector.
 ///
 /// This function is called to test each entry in a partition which is slated
@@ -2146,7 +2154,7 @@ static bool isVectorPromotionViableForSlice(Partition &P, const Slice &S,
                                             VectorType *Ty,
                                             uint64_t ElementSize,
                                             const DataLayout &DL,
-                                            unsigned VScale) {
+                                            unsigned VScale, bool IsSPIRV) {
   // First validate the slice offsets.
   uint64_t BeginOffset =
       std::max(S.beginOffset(), P.beginOffset()) - P.beginOffset();
@@ -2162,6 +2170,9 @@ static bool isVectorPromotionViableForSlice(Partition &P, const Slice &S,
 
   assert(EndIndex > BeginIndex && "Empty vector!");
   uint64_t NumElements = EndIndex - BeginIndex;
+  if (IsSPIRV && NumElements > 1 && !isValidSPIRVVectorSize(NumElements))
+    return false;
+
   Type *SliceTy = (NumElements == 1)
                       ? Ty->getElementType()
                       : FixedVectorType::get(Ty->getElementType(), NumElements);
@@ -2226,7 +2237,8 @@ checkVectorTypesForPromotion(Partition &P, const DataLayout &DL,
                              SmallVectorImpl<VectorType *> &CandidateTys,
                              bool HaveCommonEltTy, Type *CommonEltTy,
                              bool HaveVecPtrTy, bool HaveCommonVecPtrTy,
-                             VectorType *CommonVecPtrTy, unsigned VScale) {
+                             VectorType *CommonVecPtrTy, unsigned VScale,
+                             bool IsSPIRV) {
   // If we didn't find a vector type, nothing to do here.
   if (CandidateTys.empty())
     return nullptr;
@@ -2296,9 +2308,11 @@ checkVectorTypesForPromotion(Partition &P, const DataLayout &DL,
 
   // FIXME: hack. Do we have a named constant for this?
   // SDAG SDNode can't have more than 65535 operands.
-  llvm::erase_if(CandidateTys, [](VectorType *VTy) {
-    return cast<FixedVectorType>(VTy)->getNumElements() >
-           std::numeric_limits<unsigned short>::max();
+  llvm::erase_if(CandidateTys, [IsSPIRV](VectorType *VTy) {
+    uint64_t NumElements = cast<FixedVectorType>(VTy)->getNumElements();
+    if (IsSPIRV && !isValidSPIRVVectorSize(NumElements))
+      return true;
+    return NumElements > std::numeric_limits<unsigned short>::max();
   });
 
   // Find a vector type viable for promotion by iterating over all slices.
@@ -2315,11 +2329,13 @@ checkVectorTypesForPromotion(Partition &P, const DataLayout &DL,
     ElementSize /= 8;
 
     for (const Slice &S : P)
-      if (!isVectorPromotionViableForSlice(P, S, VTy, ElementSize, DL, VScale))
+      if (!isVectorPromotionViableForSlice(P, S, VTy, ElementSize, DL, VScale,
+                                           IsSPIRV))
         return false;
 
     for (const Slice *S : P.splitSliceTails())
-      if (!isVectorPromotionViableForSlice(P, *S, VTy, ElementSize, DL, VScale))
+      if (!isVectorPromotionViableForSlice(P, *S, VTy, ElementSize, DL, VScale,
+                                           IsSPIRV))
         return false;
 
     return true;
@@ -2332,7 +2348,8 @@ static VectorType *createAndCheckVectorTypesForPromotion(
     function_ref<void(Type *)> CheckCandidateType, Partition &P,
     const DataLayout &DL, SmallVectorImpl<VectorType *> &CandidateTys,
     bool &HaveCommonEltTy, Type *&CommonEltTy, bool &HaveVecPtrTy,
-    bool &HaveCommonVecPtrTy, VectorType *&CommonVecPtrTy, unsigned VScale) {
+    bool &HaveCommonVecPtrTy, VectorType *&CommonVecPtrTy, unsigned VScale,
+    bool IsSPIRV) {
   [[maybe_unused]] VectorType *OriginalElt =
       CandidateTysCopy.size() ? CandidateTysCopy[0] : nullptr;
   // Consider additional vector types where the element type size is a
@@ -2359,7 +2376,7 @@ static VectorType *createAndCheckVectorTypesForPromotion(
 
   return checkVectorTypesForPromotion(
       P, DL, CandidateTys, HaveCommonEltTy, CommonEltTy, HaveVecPtrTy,
-      HaveCommonVecPtrTy, CommonVecPtrTy, VScale);
+      HaveCommonVecPtrTy, CommonVecPtrTy, VScale, IsSPIRV);
 }
 
 /// Test whether the given alloca partitioning and range of slices can be
@@ -2372,7 +2389,7 @@ static VectorType *createAndCheckVectorTypesForPromotion(
 /// don't want to do the rewrites unless we are confident that the result will
 /// be promotable, so we have an early test here.
 static VectorType *isVectorPromotionViable(Partition &P, const DataLayout &DL,
-                                           unsigned VScale) {
+                                           unsigned VScale, bool IsSPIRV) {
   // Collect the candidate types for vector-based promotion. Also track whether
   // we have different element types.
   SmallVector<VectorType *, 4> CandidateTys;
@@ -2439,14 +2456,14 @@ static VectorType *isVectorPromotionViable(Partition &P, const DataLayout &DL,
   if (auto *VTy = createAndCheckVectorTypesForPromotion(
           LoadStoreTys, CandidateTysCopy, CheckCandidateType, P, DL,
           CandidateTys, HaveCommonEltTy, CommonEltTy, HaveVecPtrTy,
-          HaveCommonVecPtrTy, CommonVecPtrTy, VScale))
+          HaveCommonVecPtrTy, CommonVecPtrTy, VScale, IsSPIRV))
     return VTy;
 
   CandidateTys.clear();
   return createAndCheckVectorTypesForPromotion(
       DeferredTys, CandidateTysCopy, CheckCandidateType, P, DL, CandidateTys,
       HaveCommonEltTy, CommonEltTy, HaveVecPtrTy, HaveCommonVecPtrTy,
-      CommonVecPtrTy, VScale);
+      CommonVecPtrTy, VScale, IsSPIRV);
 }
 
 /// Test whether a slice of an alloca is valid for integer widening.
@@ -5459,8 +5476,11 @@ bool SROA::presplitLoadsAndStores(AllocaInst &AI, AllocaSlices &AS) {
 /// this transformation by the "AggregateToVector" pass option.
 static FixedVectorType *tryCanonicalizeStructToVector(StructType *STy,
                                                       Partition &P,
-                                                      const DataLayout &DL) {
+                                                      const DataLayout &DL,
+                                                      bool IsSPIRV) {
   unsigned NumElts = STy->getNumElements();
+  if (IsSPIRV && !isValidSPIRVVectorSize(NumElts))
+    return nullptr;
 
   Type *EltTy = STy->getElementType(0);
   if (!llvm::all_equal(STy->elements()))
@@ -5546,6 +5566,7 @@ selectPartitionType(Partition &P, const DataLayout &DL, AllocaInst &AI,
       dbgs() << " intwiden=" << SelectedIntWidening << "\n";
     });
   };
+  bool IsSPIRV = AI.getModule()->getTargetTriple().isSPIROrSPIRV();
   // First check if the partition is viable for vector promotion.
   //
   // We prefer vector promotion over integer widening promotion when:
@@ -5556,8 +5577,8 @@ selectPartitionType(Partition &P, const DataLayout &DL, AllocaInst &AI,
   // Otherwise when there is an integer vector with mixed type loads/stores we
   // prefer integer widening promotion because it's more likely the user is
   // doing bitwise arithmetic and we generate better code.
-  VectorType *VecTy =
-      isVectorPromotionViable(P, DL, AI.getFunction()->getVScaleValue());
+  VectorType *VecTy = isVectorPromotionViable(
+      P, DL, AI.getFunction()->getVScaleValue(), IsSPIRV);
   // If the vector element type is a floating-point type, we prefer vector
   // promotion. If the vector has one element, let the below code select
   // whether we promote with the vector or scalar.
@@ -5620,7 +5641,7 @@ selectPartitionType(Partition &P, const DataLayout &DL, AllocaInst &AI,
     // this too early can hide memcpy chains from MemCpyOpt.
     if (AggregateToVector) {
       if (auto *STy = dyn_cast<StructType>(TypePartitionTy)) {
-        if (auto *VTy = tryCanonicalizeStructToVector(STy, P, DL)) {
+        if (auto *VTy = tryCanonicalizeStructToVector(STy, P, DL, IsSPIRV)) {
           LogSelection("struct-fallback-vecty", VTy, nullptr, false);
           return {VTy, false, nullptr};
         }
