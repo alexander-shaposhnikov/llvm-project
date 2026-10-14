@@ -16,6 +16,8 @@ define void @udiv_uniform_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, 
 ; CHECK-NEXT:    [[N_VEC:%.*]] = sub i64 64, [[N_MOD_VF]]
 ; CHECK-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <vscale x 2 x i64> poison, i64 [[START]], i64 0
 ; CHECK-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <vscale x 2 x i64> [[BROADCAST_SPLATINSERT]], <vscale x 2 x i64> poison, <vscale x 2 x i32> zeroinitializer
+; CHECK-NEXT:    [[BROADCAST_SPLATINSERT2:%.*]] = insertelement <vscale x 2 x i32> poison, i32 [[DIVISOR]], i64 0
+; CHECK-NEXT:    [[BROADCAST_SPLAT3:%.*]] = shufflevector <vscale x 2 x i32> [[BROADCAST_SPLATINSERT2]], <vscale x 2 x i32> poison, <vscale x 2 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP2:%.*]] = call <vscale x 2 x i64> @llvm.stepvector.nxv2i64()
 ; CHECK-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <vscale x 2 x i64> poison, i64 [[TMP1]], i64 0
 ; CHECK-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <vscale x 2 x i64> [[BROADCAST_SPLATINSERT1]], <vscale x 2 x i64> poison, <vscale x 2 x i32> zeroinitializer
@@ -24,13 +26,9 @@ define void @udiv_uniform_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, 
 ; CHECK-NEXT:    [[INDEX3:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <vscale x 2 x i64> [ [[TMP2]], %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[TMP3:%.*]] = icmp uge <vscale x 2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP4:%.*]] = extractelement <vscale x 2 x i1> [[TMP3]], i64 0
-; CHECK-NEXT:    [[TMP5:%.*]] = select i1 [[TMP4]], i32 [[DIVISOR]], i32 1
-; CHECK-NEXT:    [[TMP6:%.*]] = udiv i32 10, [[TMP5]]
-; CHECK-NEXT:    [[TMP7:%.*]] = zext i32 [[TMP6]] to i64
-; CHECK-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP7]]
-; CHECK-NEXT:    [[BROADCAST_SPLATINSERT4:%.*]] = insertelement <vscale x 2 x ptr> poison, ptr [[TMP8]], i64 0
-; CHECK-NEXT:    [[BROADCAST_SPLAT5:%.*]] = shufflevector <vscale x 2 x ptr> [[BROADCAST_SPLATINSERT4]], <vscale x 2 x ptr> poison, <vscale x 2 x i32> zeroinitializer
+; CHECK-NEXT:    [[TMP4:%.*]] = call <vscale x 2 x i32> @llvm.masked.udiv.nxv2i32(<vscale x 2 x i32> splat (i32 10), <vscale x 2 x i32> [[BROADCAST_SPLAT3]], <vscale x 2 x i1> [[TMP3]])
+; CHECK-NEXT:    [[TMP5:%.*]] = zext <vscale x 2 x i32> [[TMP4]] to <vscale x 2 x i64>
+; CHECK-NEXT:    [[BROADCAST_SPLAT5:%.*]] = getelementptr i32, ptr [[SRC]], <vscale x 2 x i64> [[TMP5]]
 ; CHECK-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <vscale x 2 x i32> @llvm.masked.gather.nxv2i32.nxv2p0(<vscale x 2 x ptr> align 4 [[BROADCAST_SPLAT5]], <vscale x 2 x i1> [[TMP3]], <vscale x 2 x i32> poison)
 ; CHECK-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX3]]
 ; CHECK-NEXT:    call void @llvm.masked.store.nxv2i32.p0(<vscale x 2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP9]], <vscale x 2 x i1> [[TMP3]])
@@ -84,6 +82,8 @@ define void @srem_uniform_ptr(ptr noalias %dst, ptr noalias %src, i32 range(i32 
 ; CHECK-NEXT:    [[N_VEC:%.*]] = sub i64 64, [[N_MOD_VF]]
 ; CHECK-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <vscale x 2 x i64> poison, i64 [[START]], i64 0
 ; CHECK-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <vscale x 2 x i64> [[BROADCAST_SPLATINSERT]], <vscale x 2 x i64> poison, <vscale x 2 x i32> zeroinitializer
+; CHECK-NEXT:    [[BROADCAST_SPLATINSERT2:%.*]] = insertelement <vscale x 2 x i32> poison, i32 [[DIVISOR]], i64 0
+; CHECK-NEXT:    [[BROADCAST_SPLAT3:%.*]] = shufflevector <vscale x 2 x i32> [[BROADCAST_SPLATINSERT2]], <vscale x 2 x i32> poison, <vscale x 2 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP2:%.*]] = call <vscale x 2 x i64> @llvm.stepvector.nxv2i64()
 ; CHECK-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <vscale x 2 x i64> poison, i64 [[TMP1]], i64 0
 ; CHECK-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <vscale x 2 x i64> [[BROADCAST_SPLATINSERT1]], <vscale x 2 x i64> poison, <vscale x 2 x i32> zeroinitializer
@@ -92,13 +92,9 @@ define void @srem_uniform_ptr(ptr noalias %dst, ptr noalias %src, i32 range(i32 
 ; CHECK-NEXT:    [[INDEX3:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <vscale x 2 x i64> [ [[TMP2]], %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[TMP3:%.*]] = icmp uge <vscale x 2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; CHECK-NEXT:    [[TMP4:%.*]] = extractelement <vscale x 2 x i1> [[TMP3]], i64 0
-; CHECK-NEXT:    [[TMP5:%.*]] = select i1 [[TMP4]], i32 [[DIVISOR]], i32 1
-; CHECK-NEXT:    [[TMP6:%.*]] = srem i32 10, [[TMP5]]
-; CHECK-NEXT:    [[TMP7:%.*]] = zext i32 [[TMP6]] to i64
-; CHECK-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP7]]
-; CHECK-NEXT:    [[BROADCAST_SPLATINSERT4:%.*]] = insertelement <vscale x 2 x ptr> poison, ptr [[TMP8]], i64 0
-; CHECK-NEXT:    [[BROADCAST_SPLAT5:%.*]] = shufflevector <vscale x 2 x ptr> [[BROADCAST_SPLATINSERT4]], <vscale x 2 x ptr> poison, <vscale x 2 x i32> zeroinitializer
+; CHECK-NEXT:    [[TMP4:%.*]] = call <vscale x 2 x i32> @llvm.masked.srem.nxv2i32(<vscale x 2 x i32> splat (i32 10), <vscale x 2 x i32> [[BROADCAST_SPLAT3]], <vscale x 2 x i1> [[TMP3]])
+; CHECK-NEXT:    [[TMP5:%.*]] = zext <vscale x 2 x i32> [[TMP4]] to <vscale x 2 x i64>
+; CHECK-NEXT:    [[BROADCAST_SPLAT5:%.*]] = getelementptr i32, ptr [[SRC]], <vscale x 2 x i64> [[TMP5]]
 ; CHECK-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <vscale x 2 x i32> @llvm.masked.gather.nxv2i32.nxv2p0(<vscale x 2 x ptr> align 4 [[BROADCAST_SPLAT5]], <vscale x 2 x i1> [[TMP3]], <vscale x 2 x i32> poison)
 ; CHECK-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX3]]
 ; CHECK-NEXT:    call void @llvm.masked.store.nxv2i32.p0(<vscale x 2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP9]], <vscale x 2 x i1> [[TMP3]])

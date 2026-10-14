@@ -5955,7 +5955,9 @@ void VPlanTransforms::makeMemOpWideningDecisions(VPlan &Plan, VFRange &Range,
               vputils::getSCEVExprForVPValue(Ptr, CostCtx.PSE, CostCtx.L);
           bool IsSingleScalarLoad =
               !isa<SCEVCouldNotCompute>(PtrSCEV) &&
-              CostCtx.PSE.getSE()->isLoopInvariant(PtrSCEV, CostCtx.L);
+              CostCtx.PSE.getSE()->isLoopInvariant(PtrSCEV, CostCtx.L) &&
+              !RecipeBuilder.dependsOnPredicatedDivRem(
+                  getLoadStorePointerOperand(I));
 
           ReplaceWith(VPI,
                       VPBuilder(VPI).insert(new VPReplicateRecipe(
@@ -5976,7 +5978,12 @@ void VPlanTransforms::makeMemOpWideningDecisions(VPlan &Plan, VFRange &Range,
             IsLoad ? VPI->getScalarType() : VPI->getOperand(0)->getScalarType();
         std::optional<int64_t> Stride =
             vputils::getConstantStride(Ptr, ScalarTy, CostCtx.PSE, CostCtx.L);
-        if (Stride != 1 && Stride != -1)
+        // A constant SCEV stride does not guarantee that lane 0 can provide
+        // the base address: its computation may be predicated off even when
+        // other lanes access memory.
+        if ((Stride != 1 && Stride != -1) ||
+            RecipeBuilder.dependsOnPredicatedDivRem(
+                getLoadStorePointerOperand(I)))
           return false;
         bool Reverse = Stride == -1;
 

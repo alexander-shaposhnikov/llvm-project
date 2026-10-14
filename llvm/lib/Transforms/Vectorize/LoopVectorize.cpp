@@ -751,6 +751,12 @@ public:
   std::pair<InstructionCost, InstructionCost>
   getDivRemSpeculationCost(Instruction *I, ElementCount VF);
 
+  /// Return true if computing \p V depends on an integer div/rem requiring
+  /// predication within the scalar loop. Lane 0 of such a value may be inactive
+  /// while other lanes use it. Predication solely for tail folding is safe:
+  /// lane 0 is active whenever any lane is active.
+  bool dependsOnPredicatedDivRem(Value *V) const;
+
   /// If \p I is a memory instruction with a consecutive pointer that can be
   /// widened, returns the widening kind (CM_Widen or CM_Widen_Reverse) and
   /// std::nullopt otherwise.
@@ -1007,8 +1013,8 @@ private:
   VFSelectionContext &Config;
 
   /// Wrapper around LoopVectorizationLegality::isUniform() that takes into
-  /// account if alias-masking is enabled. We consider the VF to be unknown when
-  /// alias masking.
+  /// account alias-masking and whether lane 0 can provide the value. We
+  /// consider the VF to be unknown when alias masking.
   bool isUniform(Value *V, ElementCount VF) const {
     // With alias-masking our runtime VF is [2, VF] (and not necessarily a
     // power-of-two). Something that is uniform for VF may not be for the full
@@ -1018,19 +1024,21 @@ private:
     return Legal->isUniform(V, PartialAliasMaskingStatus ==
                                        AliasMaskingStatus::Disabled
                                    ? std::optional(VF)
-                                   : std::nullopt);
+                                   : std::nullopt) &&
+           !dependsOnPredicatedDivRem(V);
   }
 
   /// Wrapper around LoopVectorizationLegality::isUniformMemOp() that takes into
-  /// account if alias-masking is enabled. We consider the VF to be unknown when
-  /// alias masking.
+  /// account alias-masking and whether lane 0 can provide the pointer. We
+  /// consider the VF to be unknown when alias masking.
   bool isUniformMemOp(Instruction &I, ElementCount VF) const {
     assert(PartialAliasMaskingStatus != AliasMaskingStatus::NotDecided &&
            "alias-mask status must be decided already");
     return Legal->isUniformMemOp(I, PartialAliasMaskingStatus ==
                                             AliasMaskingStatus::Disabled
                                         ? std::optional(VF)
-                                        : std::nullopt);
+                                        : std::nullopt) &&
+           !dependsOnPredicatedDivRem(getLoadStorePointerOperand(&I));
   }
 
   /// Calculate vectorization cost of memory instruction \p I.
@@ -1091,6 +1099,12 @@ private:
   /// instruction will be scalarized when vectorizing with the associated
   /// vectorization factor. The entries are VF-ScalarCostTy pairs.
   MapVector<ElementCount, ScalarCostsTy> InstsToScalarize;
+
+  /// Div/rem predication within the scalar loop does not depend on VF or
+  /// tail folding. Cache whether the loop contains any such instruction, and
+  /// only walk operand chains if it does.
+  mutable std::optional<bool> HasPredicatedDivRem;
+  mutable DenseMap<Value *, bool> PredicatedDivRemDependencyCache;
 
   /// Holds the instructions known to be uniform after vectorization.
   /// The data is collected per VF.
@@ -2274,6 +2288,40 @@ LoopVectorizationCostModel::getDivRemSpeculationCost(Instruction *I,
   return {ScalarizationCost, MaskedCost};
 }
 
+bool LoopVectorizationCostModel::dependsOnPredicatedDivRem(Value *V) const {
+  auto IsHazard = [&](Instruction *I) {
+    return I->isIntDivRem() && Legal->blockNeedsPredication(I->getParent()) &&
+           isPredicatedInst(I);
+  };
+  if (!HasPredicatedDivRem)
+    HasPredicatedDivRem = any_of(TheLoop->blocks(), [&](BasicBlock *BB) {
+      return any_of(*BB, [&](Instruction &I) { return IsHazard(&I); });
+    });
+  if (!*HasPredicatedDivRem)
+    return false;
+
+  auto [It, Inserted] = PredicatedDivRemDependencyCache.try_emplace(V, false);
+  if (!Inserted)
+    return It->second;
+
+  // Conservatively follow blend PHIs and selects. A merge may make lane 0
+  // usable again, but this requires reasoning about its masks. Stop at header
+  // PHIs: their backedges do not compute the value for the current iteration.
+  SmallVector<Value *> Worklist = {V};
+  SmallPtrSet<Value *, 8> Visited;
+  while (!Worklist.empty()) {
+    auto *I = dyn_cast<Instruction>(Worklist.pop_back_val());
+    if (!I || !TheLoop->contains(I) || !Visited.insert(I).second)
+      continue;
+    if (IsHazard(I))
+      return It->second = true;
+    if (isa<PHINode>(I) && I->getParent() == TheLoop->getHeader())
+      continue;
+    append_range(Worklist, I->operands());
+  }
+  return false;
+}
+
 bool LoopVectorizationCostModel::interleavedAccessCanBeWidened(
     Instruction *I, ElementCount VF) const {
   assert(isAccessInterleaved(I) && "Expecting interleaved access.");
@@ -2282,6 +2330,11 @@ bool LoopVectorizationCostModel::interleavedAccessCanBeWidened(
   auto *Group = getInterleavedAccessGroup(I);
   assert(Group && "Must have a group.");
   unsigned InterleaveFactor = Group->getFactor();
+
+  if (any_of(Group->members(), [&](Instruction *Member) {
+        return dependsOnPredicatedDivRem(getLoadStorePointerOperand(Member));
+      }))
+    return false;
 
   // If the instruction's allocated size doesn't equal its type size, it
   // requires padding and will be scalarized.
@@ -2357,7 +2410,10 @@ LoopVectorizationCostModel::memoryInstructionCanBeWidened(Instruction *I,
 
   // In order to be widened, the pointer should be consecutive, first of all.
   int Stride = Legal->isConsecutivePtr(ScalarTy, Ptr);
-  if (!Stride)
+  // SCEV may find a constant stride even if the pointer depends on a
+  // predicated div/rem. In that case, lane 0 cannot provide the base address
+  // for a widened access when only other lanes are active.
+  if (!Stride || dependsOnPredicatedDivRem(Ptr))
     return std::nullopt;
 
   // If the instruction is a store located in a predicated block, it will be
@@ -2492,7 +2548,8 @@ void LoopVectorizationCostModel::collectLoopUniforms(ElementCount VF) {
     if (isa<StoreInst>(I) && I->getOperand(0) == Ptr)
       return false;
     return getLoadStorePointerOperand(I) == Ptr &&
-           (IsUniformDecision(I, VF) || Legal->isInvariant(Ptr));
+           (IsUniformDecision(I, VF) ||
+            (Legal->isInvariant(Ptr) && !dependsOnPredicatedDivRem(Ptr)));
   };
 
   // Holds a list of values which are known to have at least one uniform use.
@@ -5772,6 +5829,10 @@ BasicBlock *EpilogueVectorizerEpilogueLoop::createVectorizedLoopSkeleton() {
 
 bool VPRecipeBuilder::isPredicatedInst(Instruction *I) const {
   return CM.isPredicatedInst(I);
+}
+
+bool VPRecipeBuilder::dependsOnPredicatedDivRem(Value *V) const {
+  return CM.dependsOnPredicatedDivRem(V);
 }
 
 bool VPRecipeBuilder::prefersVectorizedAddressing() const {
