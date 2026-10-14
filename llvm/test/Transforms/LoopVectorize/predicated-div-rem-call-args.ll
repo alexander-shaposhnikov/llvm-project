@@ -54,32 +54,34 @@ define void @udiv_uniform_arg(ptr noalias %dst, i32 %divisor, i64 %start) {
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
-; MASKED-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[PRED_STORE_CONTINUE2:.*]] ]
-; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[PRED_STORE_CONTINUE2]] ]
+; MASKED-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[PRED_STORE_CONTINUE4:.*]] ]
+; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[PRED_STORE_CONTINUE4]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = udiv i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = zext i32 [[TMP3]] to i64
-; MASKED-NEXT:    [[TMP5:%.*]] = call <2 x i64> @foo_masked(<2 x i64> [[VEC_IND]], i64 [[TMP4]], <2 x i1> [[TMP0]])
-; MASKED-NEXT:    br i1 [[TMP1]], label %[[PRED_STORE_IF:.*]], label %[[PRED_STORE_CONTINUE:.*]]
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.udiv.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[TMP1]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
+; MASKED-NEXT:    br i1 [[TMP3]], label %[[PRED_STORE_IF:.*]], label %[[PRED_STORE_CONTINUE:.*]]
 ; MASKED:       [[PRED_STORE_IF]]:
+; MASKED-NEXT:    [[TMP4:%.*]] = extractelement <2 x i64> [[TMP2]], i64 0
+; MASKED-NEXT:    [[TMP5:%.*]] = call i64 @foo(i64 [[INDEX]], i64 [[TMP4]]) #[[ATTR2:[0-9]+]]
 ; MASKED-NEXT:    [[TMP6:%.*]] = getelementptr i64, ptr [[DST]], i64 [[INDEX]]
-; MASKED-NEXT:    [[TMP7:%.*]] = extractelement <2 x i64> [[TMP5]], i64 0
-; MASKED-NEXT:    store i64 [[TMP7]], ptr [[TMP6]], align 8
+; MASKED-NEXT:    store i64 [[TMP5]], ptr [[TMP6]], align 8
 ; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE]]
 ; MASKED:       [[PRED_STORE_CONTINUE]]:
-; MASKED-NEXT:    [[TMP8:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
-; MASKED-NEXT:    br i1 [[TMP8]], label %[[PRED_STORE_IF1:.*]], label %[[PRED_STORE_CONTINUE2]]
-; MASKED:       [[PRED_STORE_IF1]]:
-; MASKED-NEXT:    [[TMP9:%.*]] = add i64 [[INDEX]], 1
-; MASKED-NEXT:    [[TMP10:%.*]] = getelementptr i64, ptr [[DST]], i64 [[TMP9]]
-; MASKED-NEXT:    [[TMP11:%.*]] = extractelement <2 x i64> [[TMP5]], i64 1
-; MASKED-NEXT:    store i64 [[TMP11]], ptr [[TMP10]], align 8
-; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE2]]
-; MASKED:       [[PRED_STORE_CONTINUE2]]:
+; MASKED-NEXT:    [[TMP7:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; MASKED-NEXT:    br i1 [[TMP7]], label %[[PRED_STORE_IF3:.*]], label %[[PRED_STORE_CONTINUE4]]
+; MASKED:       [[PRED_STORE_IF3]]:
+; MASKED-NEXT:    [[TMP8:%.*]] = add i64 [[INDEX]], 1
+; MASKED-NEXT:    [[TMP9:%.*]] = extractelement <2 x i64> [[TMP2]], i64 1
+; MASKED-NEXT:    [[TMP10:%.*]] = call i64 @foo(i64 [[TMP8]], i64 [[TMP9]]) #[[ATTR2]]
+; MASKED-NEXT:    [[TMP11:%.*]] = getelementptr i64, ptr [[DST]], i64 [[TMP8]]
+; MASKED-NEXT:    store i64 [[TMP10]], ptr [[TMP11]], align 8
+; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE4]]
+; MASKED:       [[PRED_STORE_CONTINUE4]]:
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 2
 ; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
 ; MASKED-NEXT:    [[TMP12:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
@@ -168,33 +170,35 @@ define void @urem_linear_arg(ptr noalias %dst, i32 %divisor, i64 %start) {
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
-; MASKED-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[PRED_STORE_CONTINUE2:.*]] ]
-; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[PRED_STORE_CONTINUE2]] ]
+; MASKED-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[PRED_STORE_CONTINUE4:.*]] ]
+; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[PRED_STORE_CONTINUE4]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = urem i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = zext i32 [[TMP3]] to i64
-; MASKED-NEXT:    [[TMP5:%.*]] = add i64 [[TMP4]], [[INDEX]]
-; MASKED-NEXT:    [[TMP6:%.*]] = call <2 x i64> @foo_linear_masked(<2 x i64> [[VEC_IND]], i64 [[TMP5]], <2 x i1> [[TMP0]])
-; MASKED-NEXT:    br i1 [[TMP1]], label %[[PRED_STORE_IF:.*]], label %[[PRED_STORE_CONTINUE:.*]]
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.urem.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[TMP1]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = add <2 x i64> [[TMP2]], [[VEC_IND]]
+; MASKED-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
+; MASKED-NEXT:    br i1 [[TMP4]], label %[[PRED_STORE_IF:.*]], label %[[PRED_STORE_CONTINUE:.*]]
 ; MASKED:       [[PRED_STORE_IF]]:
+; MASKED-NEXT:    [[TMP5:%.*]] = extractelement <2 x i64> [[TMP3]], i64 0
+; MASKED-NEXT:    [[TMP6:%.*]] = call i64 @foo(i64 [[INDEX]], i64 [[TMP5]]) #[[ATTR3:[0-9]+]]
 ; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i64, ptr [[DST]], i64 [[INDEX]]
-; MASKED-NEXT:    [[TMP8:%.*]] = extractelement <2 x i64> [[TMP6]], i64 0
-; MASKED-NEXT:    store i64 [[TMP8]], ptr [[TMP7]], align 8
+; MASKED-NEXT:    store i64 [[TMP6]], ptr [[TMP7]], align 8
 ; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE]]
 ; MASKED:       [[PRED_STORE_CONTINUE]]:
-; MASKED-NEXT:    [[TMP9:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
-; MASKED-NEXT:    br i1 [[TMP9]], label %[[PRED_STORE_IF1:.*]], label %[[PRED_STORE_CONTINUE2]]
-; MASKED:       [[PRED_STORE_IF1]]:
-; MASKED-NEXT:    [[TMP10:%.*]] = add i64 [[INDEX]], 1
-; MASKED-NEXT:    [[TMP11:%.*]] = getelementptr i64, ptr [[DST]], i64 [[TMP10]]
-; MASKED-NEXT:    [[TMP12:%.*]] = extractelement <2 x i64> [[TMP6]], i64 1
-; MASKED-NEXT:    store i64 [[TMP12]], ptr [[TMP11]], align 8
-; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE2]]
-; MASKED:       [[PRED_STORE_CONTINUE2]]:
+; MASKED-NEXT:    [[TMP8:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; MASKED-NEXT:    br i1 [[TMP8]], label %[[PRED_STORE_IF3:.*]], label %[[PRED_STORE_CONTINUE4]]
+; MASKED:       [[PRED_STORE_IF3]]:
+; MASKED-NEXT:    [[TMP9:%.*]] = add i64 [[INDEX]], 1
+; MASKED-NEXT:    [[TMP10:%.*]] = extractelement <2 x i64> [[TMP3]], i64 1
+; MASKED-NEXT:    [[TMP11:%.*]] = call i64 @foo(i64 [[TMP9]], i64 [[TMP10]]) #[[ATTR3]]
+; MASKED-NEXT:    [[TMP12:%.*]] = getelementptr i64, ptr [[DST]], i64 [[TMP9]]
+; MASKED-NEXT:    store i64 [[TMP11]], ptr [[TMP12]], align 8
+; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE4]]
+; MASKED:       [[PRED_STORE_CONTINUE4]]:
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 2
 ; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
 ; MASKED-NEXT:    [[TMP13:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
@@ -290,7 +294,7 @@ define void @safe_uniform_arg(ptr noalias %dst, i32 %divisor, i64 %start) {
 ; MASKED-NEXT:    [[TMP3:%.*]] = extractelement <2 x i1> [[TMP2]], i64 0
 ; MASKED-NEXT:    br i1 [[TMP3]], label %[[PRED_STORE_IF:.*]], label %[[PRED_STORE_CONTINUE:.*]]
 ; MASKED:       [[PRED_STORE_IF]]:
-; MASKED-NEXT:    [[TMP4:%.*]] = call i64 @foo(i64 [[INDEX]], i64 [[TMP1]]) #[[ATTR2:[0-9]+]]
+; MASKED-NEXT:    [[TMP4:%.*]] = call i64 @foo(i64 [[INDEX]], i64 [[TMP1]]) #[[ATTR2]]
 ; MASKED-NEXT:    [[TMP5:%.*]] = getelementptr i64, ptr [[DST]], i64 [[INDEX]]
 ; MASKED-NEXT:    store i64 [[TMP4]], ptr [[TMP5]], align 8
 ; MASKED-NEXT:    br label %[[PRED_STORE_CONTINUE]]

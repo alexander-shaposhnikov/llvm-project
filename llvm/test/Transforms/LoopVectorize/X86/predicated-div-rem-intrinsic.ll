@@ -22,21 +22,30 @@ define void @powi_arg(ptr noalias %dst, i32 %divisor, i64 %start) {
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UDIV_IF:.*]], label %[[PRED_UDIV_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UDIV_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = udiv i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UDIV_IF]] ]
-; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
-; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UDIV_IF1:.*]], label %[[PRED_UDIV_CONTINUE2]]
+; SCALAR-NEXT:    [[TMP4:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UDIV_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; SCALAR-NEXT:    br i1 [[TMP5]], label %[[PRED_UDIV_IF1:.*]], label %[[PRED_UDIV_CONTINUE2]]
 ; SCALAR:       [[PRED_UDIV_IF1]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = udiv i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP4]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE2]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE2]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = call <2 x double> @llvm.powi.v2f64.i32(<2 x double> splat (double 2.000000e+00), i32 [[TMP3]])
-; SCALAR-NEXT:    [[TMP6:%.*]] = getelementptr double, ptr [[DST]], i64 [[INDEX]]
-; SCALAR-NEXT:    call void @llvm.masked.store.v2f64.p0(<2 x double> [[TMP5]], ptr align 8 [[TMP6]], <2 x i1> [[TMP0]])
+; SCALAR-NEXT:    [[TMP8:%.*]] = phi <2 x i32> [ [[TMP4]], %[[PRED_UDIV_CONTINUE]] ], [ [[TMP7]], %[[PRED_UDIV_IF1]] ]
+; SCALAR-NEXT:    [[TMP9:%.*]] = extractelement <2 x i32> [[TMP8]], i64 0
+; SCALAR-NEXT:    [[TMP10:%.*]] = call double @llvm.powi.f64.i32(double 2.000000e+00, i32 [[TMP9]])
+; SCALAR-NEXT:    [[TMP11:%.*]] = extractelement <2 x i32> [[TMP8]], i64 1
+; SCALAR-NEXT:    [[TMP12:%.*]] = call double @llvm.powi.f64.i32(double 2.000000e+00, i32 [[TMP11]])
+; SCALAR-NEXT:    [[TMP13:%.*]] = insertelement <2 x double> poison, double [[TMP10]], i64 0
+; SCALAR-NEXT:    [[TMP14:%.*]] = insertelement <2 x double> [[TMP13]], double [[TMP12]], i64 1
+; SCALAR-NEXT:    [[TMP15:%.*]] = getelementptr double, ptr [[DST]], i64 [[INDEX]]
+; SCALAR-NEXT:    call void @llvm.masked.store.v2f64.p0(<2 x double> [[TMP14]], ptr align 8 [[TMP15]], <2 x i1> [[TMP0]])
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 2
 ; SCALAR-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; SCALAR-NEXT:    [[TMP7:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; SCALAR-NEXT:    br i1 [[TMP7]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
+; SCALAR-NEXT:    [[TMP16:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; SCALAR-NEXT:    br i1 [[TMP16]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
 ; SCALAR:       [[MIDDLE_BLOCK]]:
 ; SCALAR-NEXT:    br label %[[EXIT:.*]]
 ; SCALAR:       [[EXIT]]:
@@ -49,21 +58,26 @@ define void @powi_arg(ptr noalias %dst, i32 %divisor, i64 %start) {
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
 ; MASKED-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = udiv i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = call <2 x double> @llvm.powi.v2f64.i32(<2 x double> splat (double 2.000000e+00), i32 [[TMP3]])
-; MASKED-NEXT:    [[TMP5:%.*]] = getelementptr double, ptr [[DST]], i64 [[INDEX]]
-; MASKED-NEXT:    call void @llvm.masked.store.v2f64.p0(<2 x double> [[TMP4]], ptr align 8 [[TMP5]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.udiv.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = extractelement <2 x i32> [[TMP1]], i64 0
+; MASKED-NEXT:    [[TMP3:%.*]] = call double @llvm.powi.f64.i32(double 2.000000e+00, i32 [[TMP2]])
+; MASKED-NEXT:    [[TMP4:%.*]] = extractelement <2 x i32> [[TMP1]], i64 1
+; MASKED-NEXT:    [[TMP5:%.*]] = call double @llvm.powi.f64.i32(double 2.000000e+00, i32 [[TMP4]])
+; MASKED-NEXT:    [[TMP6:%.*]] = insertelement <2 x double> poison, double [[TMP3]], i64 0
+; MASKED-NEXT:    [[TMP7:%.*]] = insertelement <2 x double> [[TMP6]], double [[TMP5]], i64 1
+; MASKED-NEXT:    [[TMP8:%.*]] = getelementptr double, ptr [[DST]], i64 [[INDEX]]
+; MASKED-NEXT:    call void @llvm.masked.store.v2f64.p0(<2 x double> [[TMP7]], ptr align 8 [[TMP8]], <2 x i1> [[TMP0]])
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 2
 ; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; MASKED-NEXT:    [[TMP6:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; MASKED-NEXT:    br i1 [[TMP6]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
+; MASKED-NEXT:    [[TMP9:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; MASKED-NEXT:    br i1 [[TMP9]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
 ; MASKED:       [[MIDDLE_BLOCK]]:
 ; MASKED-NEXT:    br label %[[EXIT:.*]]
 ; MASKED:       [[EXIT]]:

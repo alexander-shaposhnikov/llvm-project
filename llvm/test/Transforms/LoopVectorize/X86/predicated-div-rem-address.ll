@@ -24,18 +24,22 @@ define void @urem_consecutive_ptr(ptr noalias %dst, ptr noalias %src, i32 %divis
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UREM_IF:.*]], label %[[PRED_UREM_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UREM_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE]]
 ; SCALAR:       [[PRED_UREM_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UREM_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UREM_IF]] ]
 ; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
 ; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UREM_IF2:.*]], label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP5]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_CONTINUE3]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = zext i32 [[TMP3]] to i64
-; SCALAR-NEXT:    [[TMP6:%.*]] = add i64 [[TMP5]], [[INDEX1]]
-; SCALAR-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP6]]
-; SCALAR-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP7]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; SCALAR-NEXT:    [[TMP11:%.*]] = phi <2 x i32> [ [[TMP5]], %[[PRED_UREM_CONTINUE]] ], [ [[TMP7]], %[[PRED_UREM_IF2]] ]
+; SCALAR-NEXT:    [[TMP12:%.*]] = zext <2 x i32> [[TMP11]] to <2 x i64>
+; SCALAR-NEXT:    [[TMP10:%.*]] = add <2 x i64> [[TMP12]], [[VEC_IND]]
+; SCALAR-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP10]]
+; SCALAR-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; SCALAR-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP8]], <2 x i1> [[TMP0]])
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
@@ -54,18 +58,18 @@ define void @urem_consecutive_ptr(ptr noalias %dst, ptr noalias %src, i32 %divis
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
 ; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = urem i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = zext i32 [[TMP3]] to i64
-; MASKED-NEXT:    [[TMP5:%.*]] = add i64 [[TMP4]], [[INDEX1]]
-; MASKED-NEXT:    [[TMP6:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP5]]
-; MASKED-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP6]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.urem.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[TMP1]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = add <2 x i64> [[TMP2]], [[VEC_IND]]
+; MASKED-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP3]]
+; MASKED-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP7]], <2 x i1> [[TMP0]])
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
@@ -124,21 +128,22 @@ define void @urem_reverse_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, 
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UREM_IF:.*]], label %[[PRED_UREM_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UREM_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE]]
 ; SCALAR:       [[PRED_UREM_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UREM_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UREM_IF]] ]
 ; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
 ; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UREM_IF2:.*]], label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP5]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_CONTINUE3]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = zext i32 [[TMP3]] to i64
-; SCALAR-NEXT:    [[TMP6:%.*]] = sub i64 [[TMP5]], [[INDEX1]]
-; SCALAR-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP6]]
-; SCALAR-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[TMP7]], i64 -1
-; SCALAR-NEXT:    [[REVERSE:%.*]] = shufflevector <2 x i1> [[TMP0]], <2 x i1> poison, <2 x i32> <i32 1, i32 0>
-; SCALAR-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP8]], <2 x i1> [[REVERSE]], <2 x i32> poison)
-; SCALAR-NEXT:    [[REVERSE4:%.*]] = shufflevector <2 x i32> [[WIDE_MASKED_LOAD]], <2 x i32> poison, <2 x i32> <i32 1, i32 0>
+; SCALAR-NEXT:    [[TMP8:%.*]] = phi <2 x i32> [ [[TMP5]], %[[PRED_UREM_CONTINUE]] ], [ [[TMP7]], %[[PRED_UREM_IF2]] ]
+; SCALAR-NEXT:    [[TMP11:%.*]] = zext <2 x i32> [[TMP8]] to <2 x i64>
+; SCALAR-NEXT:    [[TMP12:%.*]] = sub <2 x i64> [[TMP11]], [[VEC_IND]]
+; SCALAR-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP12]]
+; SCALAR-NEXT:    [[REVERSE4:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; SCALAR-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[REVERSE4]], ptr align 4 [[TMP9]], <2 x i1> [[TMP0]])
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
@@ -157,21 +162,18 @@ define void @urem_reverse_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, 
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
 ; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = urem i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = zext i32 [[TMP3]] to i64
-; MASKED-NEXT:    [[TMP5:%.*]] = sub i64 [[TMP4]], [[INDEX1]]
-; MASKED-NEXT:    [[TMP6:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP5]]
-; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[TMP6]], i64 -1
-; MASKED-NEXT:    [[REVERSE:%.*]] = shufflevector <2 x i1> [[TMP0]], <2 x i1> poison, <2 x i32> <i32 1, i32 0>
-; MASKED-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP7]], <2 x i1> [[REVERSE]], <2 x i32> poison)
-; MASKED-NEXT:    [[REVERSE2:%.*]] = shufflevector <2 x i32> [[WIDE_MASKED_LOAD]], <2 x i32> poison, <2 x i32> <i32 1, i32 0>
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.urem.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[TMP1]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = sub <2 x i64> [[TMP2]], [[VEC_IND]]
+; MASKED-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP3]]
+; MASKED-NEXT:    [[REVERSE2:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; MASKED-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[REVERSE2]], ptr align 4 [[TMP8]], <2 x i1> [[TMP0]])
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
@@ -230,22 +232,25 @@ define void @urem_interleaved_ptr(ptr noalias %dst, ptr noalias %src, i32 %divis
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UREM_IF:.*]], label %[[PRED_UREM_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UREM_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE]]
 ; SCALAR:       [[PRED_UREM_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UREM_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UREM_IF]] ]
 ; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
 ; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UREM_IF2:.*]], label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP5]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_CONTINUE3]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = zext i32 [[TMP3]] to i64
-; SCALAR-NEXT:    [[TMP6:%.*]] = shl i64 [[INDEX1]], 1
-; SCALAR-NEXT:    [[TMP7:%.*]] = add i64 [[TMP5]], [[TMP6]]
-; SCALAR-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP7]]
-; SCALAR-NEXT:    [[INTERLEAVED_MASK:%.*]] = shufflevector <2 x i1> [[TMP0]], <2 x i1> poison, <4 x i32> <i32 0, i32 0, i32 1, i32 1>
-; SCALAR-NEXT:    [[WIDE_MASKED_VEC:%.*]] = call <4 x i32> @llvm.masked.load.v4i32.p0(ptr align 4 [[TMP8]], <4 x i1> [[INTERLEAVED_MASK]], <4 x i32> poison)
-; SCALAR-NEXT:    [[STRIDED_VEC:%.*]] = shufflevector <4 x i32> [[WIDE_MASKED_VEC]], <4 x i32> poison, <2 x i32> <i32 0, i32 2>
-; SCALAR-NEXT:    [[STRIDED_VEC4:%.*]] = shufflevector <4 x i32> [[WIDE_MASKED_VEC]], <4 x i32> poison, <2 x i32> <i32 1, i32 3>
+; SCALAR-NEXT:    [[TMP8:%.*]] = phi <2 x i32> [ [[TMP5]], %[[PRED_UREM_CONTINUE]] ], [ [[TMP7]], %[[PRED_UREM_IF2]] ]
+; SCALAR-NEXT:    [[TMP12:%.*]] = zext <2 x i32> [[TMP8]] to <2 x i64>
+; SCALAR-NEXT:    [[TMP13:%.*]] = shl <2 x i64> [[VEC_IND]], splat (i64 1)
+; SCALAR-NEXT:    [[TMP14:%.*]] = add <2 x i64> [[TMP12]], [[TMP13]]
+; SCALAR-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP14]]
+; SCALAR-NEXT:    [[STRIDED_VEC:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; SCALAR-NEXT:    [[WIDE_GEP4:%.*]] = getelementptr i32, <2 x ptr> [[WIDE_GEP]], i64 1
+; SCALAR-NEXT:    [[STRIDED_VEC4:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP4]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; SCALAR-NEXT:    [[TMP9:%.*]] = add <2 x i32> [[STRIDED_VEC]], [[STRIDED_VEC4]]
 ; SCALAR-NEXT:    [[TMP10:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[TMP9]], ptr align 4 [[TMP10]], <2 x i1> [[TMP0]])
@@ -265,22 +270,21 @@ define void @urem_interleaved_ptr(ptr noalias %dst, ptr noalias %src, i32 %divis
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
 ; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = urem i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = zext i32 [[TMP3]] to i64
-; MASKED-NEXT:    [[TMP5:%.*]] = shl i64 [[INDEX1]], 1
-; MASKED-NEXT:    [[TMP6:%.*]] = add i64 [[TMP4]], [[TMP5]]
-; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP6]]
-; MASKED-NEXT:    [[INTERLEAVED_MASK:%.*]] = shufflevector <2 x i1> [[TMP0]], <2 x i1> poison, <4 x i32> <i32 0, i32 0, i32 1, i32 1>
-; MASKED-NEXT:    [[WIDE_MASKED_VEC:%.*]] = call <4 x i32> @llvm.masked.load.v4i32.p0(ptr align 4 [[TMP7]], <4 x i1> [[INTERLEAVED_MASK]], <4 x i32> poison)
-; MASKED-NEXT:    [[STRIDED_VEC:%.*]] = shufflevector <4 x i32> [[WIDE_MASKED_VEC]], <4 x i32> poison, <2 x i32> <i32 0, i32 2>
-; MASKED-NEXT:    [[STRIDED_VEC2:%.*]] = shufflevector <4 x i32> [[WIDE_MASKED_VEC]], <4 x i32> poison, <2 x i32> <i32 1, i32 3>
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.urem.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[TMP1]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = shl <2 x i64> [[VEC_IND]], splat (i64 1)
+; MASKED-NEXT:    [[TMP4:%.*]] = add <2 x i64> [[TMP2]], [[TMP3]]
+; MASKED-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP4]]
+; MASKED-NEXT:    [[STRIDED_VEC:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; MASKED-NEXT:    [[WIDE_GEP4:%.*]] = getelementptr i32, <2 x ptr> [[WIDE_GEP]], i64 1
+; MASKED-NEXT:    [[STRIDED_VEC2:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP4]], <2 x i1> [[TMP0]], <2 x i32> poison)
 ; MASKED-NEXT:    [[TMP8:%.*]] = add <2 x i32> [[STRIDED_VEC]], [[STRIDED_VEC2]]
 ; MASKED-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
 ; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[TMP8]], ptr align 4 [[TMP9]], <2 x i1> [[TMP0]])
@@ -344,26 +348,30 @@ define void @udiv_select_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, i
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UDIV_IF:.*]], label %[[PRED_UDIV_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UDIV_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = udiv i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UDIV_IF]] ]
-; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
-; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UDIV_IF2:.*]], label %[[PRED_UDIV_CONTINUE3]]
+; SCALAR-NEXT:    [[TMP4:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UDIV_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; SCALAR-NEXT:    br i1 [[TMP5]], label %[[PRED_UDIV_IF2:.*]], label %[[PRED_UDIV_CONTINUE3]]
 ; SCALAR:       [[PRED_UDIV_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = udiv i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP4]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE3]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE3]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = select i1 [[CHOOSE]], i32 [[TMP3]], i32 0
-; SCALAR-NEXT:    [[TMP6:%.*]] = zext i32 [[TMP5]] to i64
-; SCALAR-NEXT:    [[TMP7:%.*]] = sub i64 [[INDEX1]], [[TMP6]]
-; SCALAR-NEXT:    [[TMP8:%.*]] = add i64 [[TMP6]], [[TMP7]]
-; SCALAR-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP8]]
-; SCALAR-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP9]], <2 x i1> [[TMP0]], <2 x i32> poison)
-; SCALAR-NEXT:    [[TMP10:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP10]], <2 x i1> [[TMP0]])
+; SCALAR-NEXT:    [[TMP8:%.*]] = phi <2 x i32> [ [[TMP4]], %[[PRED_UDIV_CONTINUE]] ], [ [[TMP7]], %[[PRED_UDIV_IF2]] ]
+; SCALAR-NEXT:    [[TMP9:%.*]] = select i1 [[CHOOSE]], <2 x i32> [[TMP8]], <2 x i32> zeroinitializer
+; SCALAR-NEXT:    [[TMP10:%.*]] = zext <2 x i32> [[TMP9]] to <2 x i64>
+; SCALAR-NEXT:    [[TMP11:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP10]]
+; SCALAR-NEXT:    [[TMP12:%.*]] = add <2 x i64> [[TMP10]], [[TMP11]]
+; SCALAR-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP12]]
+; SCALAR-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; SCALAR-NEXT:    [[TMP13:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
+; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP13]], <2 x i1> [[TMP0]])
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
 ; SCALAR-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; SCALAR-NEXT:    [[TMP11:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; SCALAR-NEXT:    br i1 [[TMP11]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
+; SCALAR-NEXT:    [[TMP14:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; SCALAR-NEXT:    br i1 [[TMP14]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
 ; SCALAR:       [[MIDDLE_BLOCK]]:
 ; SCALAR-NEXT:    br label %[[EXIT:.*]]
 ; SCALAR:       [[EXIT]]:
@@ -376,26 +384,26 @@ define void @udiv_select_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, i
 ; MASKED:       [[VECTOR_PH]]:
 ; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
 ; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
-; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
+; MASKED-NEXT:    [[INDEX3:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
-; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP3:%.*]] = udiv i32 10, [[TMP2]]
-; MASKED-NEXT:    [[TMP4:%.*]] = select i1 [[CHOOSE]], i32 [[TMP3]], i32 0
-; MASKED-NEXT:    [[TMP5:%.*]] = zext i32 [[TMP4]] to i64
-; MASKED-NEXT:    [[TMP6:%.*]] = sub i64 [[INDEX1]], [[TMP5]]
-; MASKED-NEXT:    [[TMP7:%.*]] = add i64 [[TMP5]], [[TMP6]]
-; MASKED-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP7]]
-; MASKED-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP8]], <2 x i1> [[TMP0]], <2 x i32> poison)
-; MASKED-NEXT:    [[TMP9:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP9]], <2 x i1> [[TMP0]])
-; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.udiv.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = select i1 [[CHOOSE]], <2 x i32> [[TMP1]], <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[TMP3:%.*]] = zext <2 x i32> [[TMP2]] to <2 x i64>
+; MASKED-NEXT:    [[TMP4:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP3]]
+; MASKED-NEXT:    [[TMP5:%.*]] = add <2 x i64> [[TMP3]], [[TMP4]]
+; MASKED-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP5]]
+; MASKED-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; MASKED-NEXT:    [[TMP6:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX3]]
+; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP6]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX3]], 2
 ; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; MASKED-NEXT:    [[TMP10:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; MASKED-NEXT:    br i1 [[TMP10]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
+; MASKED-NEXT:    [[TMP7:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; MASKED-NEXT:    br i1 [[TMP7]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP5:![0-9]+]]
 ; MASKED:       [[MIDDLE_BLOCK]]:
 ; MASKED-NEXT:    br label %[[EXIT:.*]]
 ; MASKED:       [[EXIT]]:
@@ -439,31 +447,47 @@ define void @urem_blend_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, i6
 ; SCALAR-NEXT:  [[ENTRY:.*:]]
 ; SCALAR-NEXT:    br label %[[VECTOR_PH:.*]]
 ; SCALAR:       [[VECTOR_PH]]:
+; SCALAR-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
+; SCALAR-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
 ; SCALAR-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; SCALAR:       [[VECTOR_BODY]]:
 ; SCALAR-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[PRED_UREM_CONTINUE3:.*]] ]
-; SCALAR-NEXT:    [[TMP0:%.*]] = icmp uge i64 [[INDEX1]], [[START]]
-; SCALAR-NEXT:    br i1 [[TMP0]], label %[[PRED_UREM_IF:.*]], label %[[PRED_UREM_CONTINUE:.*]]
+; SCALAR-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[PRED_UREM_CONTINUE3]] ]
+; SCALAR-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
+; SCALAR-NEXT:    [[TMP1:%.*]] = extractelement <2 x i1> [[TMP0]], i64 0
+; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UREM_IF:.*]], label %[[PRED_UREM_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UREM_IF]]:
-; SCALAR-NEXT:    [[TMP1:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP2:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i32> poison, i32 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE]]
 ; SCALAR:       [[PRED_UREM_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP2:%.*]] = phi i32 [ poison, %[[VECTOR_BODY]] ], [ [[TMP1]], %[[PRED_UREM_IF]] ]
-; SCALAR-NEXT:    br i1 [[TMP0]], label %[[PRED_UREM_IF2:.*]], label %[[PRED_UREM_CONTINUE3]]
+; SCALAR-NEXT:    [[TMP4:%.*]] = phi <2 x i32> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UREM_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; SCALAR-NEXT:    br i1 [[TMP5]], label %[[PRED_UREM_IF2:.*]], label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = urem i32 10, [[DIVISOR]]
+; SCALAR-NEXT:    [[TMP7:%.*]] = insertelement <2 x i32> [[TMP4]], i32 [[TMP6]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UREM_CONTINUE3]]
 ; SCALAR:       [[PRED_UREM_CONTINUE3]]:
-; SCALAR-NEXT:    [[PREDPHI:%.*]] = select i1 [[TMP0]], i32 [[TMP2]], i32 0
-; SCALAR-NEXT:    [[TMP3:%.*]] = zext i32 [[PREDPHI]] to i64
-; SCALAR-NEXT:    [[TMP4:%.*]] = sub i64 [[INDEX1]], [[TMP3]]
-; SCALAR-NEXT:    [[TMP5:%.*]] = add i64 [[TMP3]], [[TMP4]]
-; SCALAR-NEXT:    [[TMP6:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP5]]
-; SCALAR-NEXT:    [[WIDE_LOAD:%.*]] = load <2 x i32>, ptr [[TMP6]], align 4
-; SCALAR-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; SCALAR-NEXT:    store <2 x i32> [[WIDE_LOAD]], ptr [[TMP7]], align 4
+; SCALAR-NEXT:    [[TMP8:%.*]] = phi <2 x i32> [ [[TMP4]], %[[PRED_UREM_CONTINUE]] ], [ [[TMP7]], %[[PRED_UREM_IF2]] ]
+; SCALAR-NEXT:    [[PREDPHI:%.*]] = select <2 x i1> [[TMP0]], <2 x i32> [[TMP8]], <2 x i32> zeroinitializer
+; SCALAR-NEXT:    [[TMP9:%.*]] = zext <2 x i32> [[PREDPHI]] to <2 x i64>
+; SCALAR-NEXT:    [[TMP10:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP9]]
+; SCALAR-NEXT:    [[TMP11:%.*]] = add <2 x i64> [[TMP9]], [[TMP10]]
+; SCALAR-NEXT:    [[TMP12:%.*]] = extractelement <2 x i64> [[TMP11]], i64 0
+; SCALAR-NEXT:    [[TMP13:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP12]]
+; SCALAR-NEXT:    [[TMP14:%.*]] = extractelement <2 x i64> [[TMP11]], i64 1
+; SCALAR-NEXT:    [[TMP15:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP14]]
+; SCALAR-NEXT:    [[TMP16:%.*]] = load i32, ptr [[TMP13]], align 4
+; SCALAR-NEXT:    [[TMP17:%.*]] = load i32, ptr [[TMP15]], align 4
+; SCALAR-NEXT:    [[TMP18:%.*]] = insertelement <2 x i32> poison, i32 [[TMP16]], i64 0
+; SCALAR-NEXT:    [[TMP19:%.*]] = insertelement <2 x i32> [[TMP18]], i32 [[TMP17]], i64 1
+; SCALAR-NEXT:    [[TMP20:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
+; SCALAR-NEXT:    store <2 x i32> [[TMP19]], ptr [[TMP20]], align 4
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
-; SCALAR-NEXT:    [[TMP8:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; SCALAR-NEXT:    br i1 [[TMP8]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP6:![0-9]+]]
+; SCALAR-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
+; SCALAR-NEXT:    [[TMP21:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; SCALAR-NEXT:    br i1 [[TMP21]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP6:![0-9]+]]
 ; SCALAR:       [[MIDDLE_BLOCK]]:
 ; SCALAR-NEXT:    br label %[[EXIT:.*]]
 ; SCALAR:       [[EXIT]]:
@@ -474,23 +498,34 @@ define void @urem_blend_ptr(ptr noalias %dst, ptr noalias %src, i32 %divisor, i6
 ; MASKED-NEXT:  [[ENTRY:.*:]]
 ; MASKED-NEXT:    br label %[[VECTOR_PH:.*]]
 ; MASKED:       [[VECTOR_PH]]:
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT:%.*]] = insertelement <2 x i64> poison, i64 [[START]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT:%.*]] = shufflevector <2 x i64> [[BROADCAST_SPLATINSERT]], <2 x i64> poison, <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[BROADCAST_SPLATINSERT1:%.*]] = insertelement <2 x i32> poison, i32 [[DIVISOR]], i64 0
+; MASKED-NEXT:    [[BROADCAST_SPLAT2:%.*]] = shufflevector <2 x i32> [[BROADCAST_SPLATINSERT1]], <2 x i32> poison, <2 x i32> zeroinitializer
 ; MASKED-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; MASKED:       [[VECTOR_BODY]]:
-; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
-; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge i64 [[INDEX1]], [[START]]
-; MASKED-NEXT:    [[TMP1:%.*]] = select i1 [[TMP0]], i32 [[DIVISOR]], i32 1
-; MASKED-NEXT:    [[TMP2:%.*]] = urem i32 10, [[TMP1]]
-; MASKED-NEXT:    [[PREDPHI:%.*]] = select i1 [[TMP0]], i32 [[TMP2]], i32 0
-; MASKED-NEXT:    [[TMP3:%.*]] = zext i32 [[PREDPHI]] to i64
-; MASKED-NEXT:    [[TMP4:%.*]] = sub i64 [[INDEX1]], [[TMP3]]
-; MASKED-NEXT:    [[TMP5:%.*]] = add i64 [[TMP3]], [[TMP4]]
+; MASKED-NEXT:    [[INDEX3:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
+; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
+; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i32> @llvm.masked.urem.v2i32(<2 x i32> splat (i32 10), <2 x i32> [[BROADCAST_SPLAT2]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[PREDPHI:%.*]] = select <2 x i1> [[TMP0]], <2 x i32> [[TMP1]], <2 x i32> zeroinitializer
+; MASKED-NEXT:    [[TMP2:%.*]] = zext <2 x i32> [[PREDPHI]] to <2 x i64>
+; MASKED-NEXT:    [[TMP3:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP2]]
+; MASKED-NEXT:    [[TMP4:%.*]] = add <2 x i64> [[TMP2]], [[TMP3]]
+; MASKED-NEXT:    [[TMP5:%.*]] = extractelement <2 x i64> [[TMP4]], i64 0
 ; MASKED-NEXT:    [[TMP6:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP5]]
-; MASKED-NEXT:    [[WIDE_LOAD:%.*]] = load <2 x i32>, ptr [[TMP6]], align 4
-; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; MASKED-NEXT:    store <2 x i32> [[WIDE_LOAD]], ptr [[TMP7]], align 4
-; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
-; MASKED-NEXT:    [[TMP8:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; MASKED-NEXT:    br i1 [[TMP8]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP6:![0-9]+]]
+; MASKED-NEXT:    [[TMP7:%.*]] = extractelement <2 x i64> [[TMP4]], i64 1
+; MASKED-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP7]]
+; MASKED-NEXT:    [[TMP9:%.*]] = load i32, ptr [[TMP6]], align 4
+; MASKED-NEXT:    [[TMP10:%.*]] = load i32, ptr [[TMP8]], align 4
+; MASKED-NEXT:    [[TMP11:%.*]] = insertelement <2 x i32> poison, i32 [[TMP9]], i64 0
+; MASKED-NEXT:    [[TMP12:%.*]] = insertelement <2 x i32> [[TMP11]], i32 [[TMP10]], i64 1
+; MASKED-NEXT:    [[TMP13:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX3]]
+; MASKED-NEXT:    store <2 x i32> [[TMP12]], ptr [[TMP13]], align 4
+; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX3]], 2
+; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
+; MASKED-NEXT:    [[TMP14:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; MASKED-NEXT:    br i1 [[TMP14]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP6:![0-9]+]]
 ; MASKED:       [[MIDDLE_BLOCK]]:
 ; MASKED-NEXT:    br label %[[EXIT:.*]]
 ; MASKED:       [[EXIT]]:
@@ -548,24 +583,29 @@ define void @udiv_varying_cancelled_ptr(ptr noalias %dst, ptr noalias %src, i64 
 ; SCALAR-NEXT:    br i1 [[TMP1]], label %[[PRED_UDIV_IF:.*]], label %[[PRED_UDIV_CONTINUE:.*]]
 ; SCALAR:       [[PRED_UDIV_IF]]:
 ; SCALAR-NEXT:    [[TMP2:%.*]] = udiv i64 10, [[INDEX1]]
+; SCALAR-NEXT:    [[TMP3:%.*]] = insertelement <2 x i64> poison, i64 [[TMP2]], i64 0
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE]]:
-; SCALAR-NEXT:    [[TMP3:%.*]] = phi i64 [ poison, %[[VECTOR_BODY]] ], [ [[TMP2]], %[[PRED_UDIV_IF]] ]
-; SCALAR-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
-; SCALAR-NEXT:    br i1 [[TMP4]], label %[[PRED_UDIV_IF2:.*]], label %[[PRED_UDIV_CONTINUE3]]
+; SCALAR-NEXT:    [[TMP4:%.*]] = phi <2 x i64> [ poison, %[[VECTOR_BODY]] ], [ [[TMP3]], %[[PRED_UDIV_IF]] ]
+; SCALAR-NEXT:    [[TMP5:%.*]] = extractelement <2 x i1> [[TMP0]], i64 1
+; SCALAR-NEXT:    br i1 [[TMP5]], label %[[PRED_UDIV_IF2:.*]], label %[[PRED_UDIV_CONTINUE3]]
 ; SCALAR:       [[PRED_UDIV_IF2]]:
+; SCALAR-NEXT:    [[TMP6:%.*]] = add i64 [[INDEX1]], 1
+; SCALAR-NEXT:    [[TMP7:%.*]] = udiv i64 10, [[TMP6]]
+; SCALAR-NEXT:    [[TMP8:%.*]] = insertelement <2 x i64> [[TMP4]], i64 [[TMP7]], i64 1
 ; SCALAR-NEXT:    br label %[[PRED_UDIV_CONTINUE3]]
 ; SCALAR:       [[PRED_UDIV_CONTINUE3]]:
-; SCALAR-NEXT:    [[TMP5:%.*]] = sub i64 [[INDEX1]], [[TMP3]]
-; SCALAR-NEXT:    [[TMP6:%.*]] = add i64 [[TMP3]], [[TMP5]]
-; SCALAR-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP6]]
-; SCALAR-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP7]], <2 x i1> [[TMP0]], <2 x i32> poison)
-; SCALAR-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP8]], <2 x i1> [[TMP0]])
+; SCALAR-NEXT:    [[TMP9:%.*]] = phi <2 x i64> [ [[TMP4]], %[[PRED_UDIV_CONTINUE]] ], [ [[TMP8]], %[[PRED_UDIV_IF2]] ]
+; SCALAR-NEXT:    [[TMP10:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP9]]
+; SCALAR-NEXT:    [[TMP11:%.*]] = add <2 x i64> [[TMP9]], [[TMP10]]
+; SCALAR-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP11]]
+; SCALAR-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; SCALAR-NEXT:    [[TMP12:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
+; SCALAR-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP12]], <2 x i1> [[TMP0]])
 ; SCALAR-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
 ; SCALAR-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; SCALAR-NEXT:    [[TMP9:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; SCALAR-NEXT:    br i1 [[TMP9]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP7:![0-9]+]]
+; SCALAR-NEXT:    [[TMP13:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; SCALAR-NEXT:    br i1 [[TMP13]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP7:![0-9]+]]
 ; SCALAR:       [[MIDDLE_BLOCK]]:
 ; SCALAR-NEXT:    br label %[[EXIT:.*]]
 ; SCALAR:       [[EXIT]]:
@@ -582,21 +622,18 @@ define void @udiv_varying_cancelled_ptr(ptr noalias %dst, ptr noalias %src, i64 
 ; MASKED:       [[VECTOR_BODY]]:
 ; MASKED-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
 ; MASKED-NEXT:    [[VEC_IND:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, %[[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], %[[VECTOR_BODY]] ]
-; MASKED-NEXT:    [[TMP0:%.*]] = extractelement <2 x i64> [[VEC_IND]], i64 0
-; MASKED-NEXT:    [[TMP1:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
-; MASKED-NEXT:    [[TMP2:%.*]] = extractelement <2 x i1> [[TMP1]], i64 0
-; MASKED-NEXT:    [[TMP3:%.*]] = select i1 [[TMP2]], i64 [[TMP0]], i64 1
-; MASKED-NEXT:    [[TMP4:%.*]] = udiv i64 10, [[TMP3]]
-; MASKED-NEXT:    [[TMP5:%.*]] = sub i64 [[INDEX1]], [[TMP4]]
-; MASKED-NEXT:    [[TMP6:%.*]] = add i64 [[TMP4]], [[TMP5]]
-; MASKED-NEXT:    [[TMP7:%.*]] = getelementptr i32, ptr [[SRC]], i64 [[TMP6]]
-; MASKED-NEXT:    [[WIDE_MASKED_LOAD:%.*]] = call <2 x i32> @llvm.masked.load.v2i32.p0(ptr align 4 [[TMP7]], <2 x i1> [[TMP1]], <2 x i32> poison)
-; MASKED-NEXT:    [[TMP8:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
-; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_LOAD]], ptr align 4 [[TMP8]], <2 x i1> [[TMP1]])
+; MASKED-NEXT:    [[TMP0:%.*]] = icmp uge <2 x i64> [[VEC_IND]], [[BROADCAST_SPLAT]]
+; MASKED-NEXT:    [[TMP1:%.*]] = call <2 x i64> @llvm.masked.udiv.v2i64(<2 x i64> splat (i64 10), <2 x i64> [[VEC_IND]], <2 x i1> [[TMP0]])
+; MASKED-NEXT:    [[TMP2:%.*]] = sub <2 x i64> [[VEC_IND]], [[TMP1]]
+; MASKED-NEXT:    [[TMP3:%.*]] = add <2 x i64> [[TMP1]], [[TMP2]]
+; MASKED-NEXT:    [[WIDE_GEP:%.*]] = getelementptr i32, ptr [[SRC]], <2 x i64> [[TMP3]]
+; MASKED-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> align 4 [[WIDE_GEP]], <2 x i1> [[TMP0]], <2 x i32> poison)
+; MASKED-NEXT:    [[TMP4:%.*]] = getelementptr i32, ptr [[DST]], i64 [[INDEX1]]
+; MASKED-NEXT:    call void @llvm.masked.store.v2i32.p0(<2 x i32> [[WIDE_MASKED_GATHER]], ptr align 4 [[TMP4]], <2 x i1> [[TMP0]])
 ; MASKED-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX1]], 2
 ; MASKED-NEXT:    [[VEC_IND_NEXT]] = add nuw nsw <2 x i64> [[VEC_IND]], splat (i64 2)
-; MASKED-NEXT:    [[TMP9:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
-; MASKED-NEXT:    br i1 [[TMP9]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP7:![0-9]+]]
+; MASKED-NEXT:    [[TMP5:%.*]] = icmp eq i64 [[INDEX_NEXT]], 64
+; MASKED-NEXT:    br i1 [[TMP5]], label %[[MIDDLE_BLOCK:.*]], label %[[VECTOR_BODY]], !llvm.loop [[LOOP7:![0-9]+]]
 ; MASKED:       [[MIDDLE_BLOCK]]:
 ; MASKED-NEXT:    br label %[[EXIT:.*]]
 ; MASKED:       [[EXIT]]:

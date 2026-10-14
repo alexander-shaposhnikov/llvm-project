@@ -5955,7 +5955,9 @@ void VPlanTransforms::makeMemOpWideningDecisions(VPlan &Plan, VFRange &Range,
               vputils::getSCEVExprForVPValue(Ptr, CostCtx.PSE, CostCtx.L);
           bool IsSingleScalarLoad =
               !isa<SCEVCouldNotCompute>(PtrSCEV) &&
-              CostCtx.PSE.getSE()->isLoopInvariant(PtrSCEV, CostCtx.L);
+              CostCtx.PSE.getSE()->isLoopInvariant(PtrSCEV, CostCtx.L) &&
+              !RecipeBuilder.dependsOnPredicatedDivRem(
+                  getLoadStorePointerOperand(I));
 
           ReplaceWith(VPI,
                       VPBuilder(VPI).insert(new VPReplicateRecipe(
@@ -5976,7 +5978,12 @@ void VPlanTransforms::makeMemOpWideningDecisions(VPlan &Plan, VFRange &Range,
             IsLoad ? VPI->getScalarType() : VPI->getOperand(0)->getScalarType();
         std::optional<int64_t> Stride =
             vputils::getConstantStride(Ptr, ScalarTy, CostCtx.PSE, CostCtx.L);
-        if (Stride != 1 && Stride != -1)
+        // A constant SCEV stride does not guarantee that lane 0 can provide
+        // the base address: its computation may be predicated off even when
+        // other lanes access memory.
+        if ((Stride != 1 && Stride != -1) ||
+            RecipeBuilder.dependsOnPredicatedDivRem(
+                getLoadStorePointerOperand(I)))
           return false;
         bool Reverse = Stride == -1;
 
@@ -6111,13 +6118,23 @@ static bool areVFParamsOk(const VFInfo &Info, ArrayRef<VPValue *> Args,
 static Function *findVectorVariant(CallInst *CI, ArrayRef<VPValue *> Args,
                                    ElementCount VF, bool MaskRequired,
                                    PredicatedScalarEvolution &PSE,
-                                   const Loop *L) {
+                                   const Loop *L,
+                                   const VPRecipeBuilder &RecipeBuilder) {
   if (CI->isNoBuiltin())
     return nullptr;
   auto Mappings = VFDatabase::getMappings(*CI);
   const auto *It = find_if(Mappings, [&](const VFInfo &Info) {
-    return Info.Shape.VF == VF && (!MaskRequired || Info.isMasked()) &&
-           areVFParamsOk(Info, Args, PSE, L);
+    if (Info.Shape.VF != VF || (MaskRequired && !Info.isMasked()) ||
+        !areVFParamsOk(Info, Args, PSE, L))
+      return false;
+    // Uniform arguments and the base of linear arguments are taken from
+    // lane 0. SCEV does not account for that lane being predicated off.
+    return none_of(Info.Shape.Parameters, [&](VFParameter Param) {
+      return (Param.ParamKind == VFParamKind::OMP_Uniform ||
+              Param.ParamKind == VFParamKind::OMP_Linear) &&
+             RecipeBuilder.dependsOnPredicatedDivRem(
+                 CI->getArgOperand(Param.ParamPos));
+    });
   });
   if (It == Mappings.end())
     return nullptr;
@@ -6143,10 +6160,10 @@ struct CallWideningDecision {
 
 /// Pick the cheapest widening for the call \p VPI at \p VF among scalarization,
 /// vector intrinsic, and vector library variant.
-static CallWideningDecision decideCallWidening(VPInstruction &VPI,
-                                               ArrayRef<VPValue *> Ops,
-                                               ElementCount VF,
-                                               VPCostContext &CostCtx) {
+static CallWideningDecision
+decideCallWidening(VPInstruction &VPI, ArrayRef<VPValue *> Ops, ElementCount VF,
+                   VPCostContext &CostCtx,
+                   const VPRecipeBuilder &RecipeBuilder) {
   auto *CI = cast<CallInst>(VPI.getUnderlyingInstr());
 
   // Scalar VFs and calls forced or known to scalarize always replicate.
@@ -6167,15 +6184,24 @@ static CallWideningDecision decideCallWidening(VPInstruction &VPI,
       VPReplicateRecipe::computeCallCost(CalledFn, ResultTy, Ops,
                                          /*IsSingleScalar=*/false, VF, CostCtx);
 
-  Function *VecFunc =
-      findVectorVariant(CI, Ops, VF, MaskRequired, CostCtx.PSE, CostCtx.L);
+  Function *VecFunc = findVectorVariant(CI, Ops, VF, MaskRequired, CostCtx.PSE,
+                                        CostCtx.L, RecipeBuilder);
   InstructionCost VecCallCost = InstructionCost::getInvalid();
   if (VecFunc)
     VecCallCost = VPWidenCallRecipe::computeCallCost(VecFunc, CostCtx);
 
+  // Scalar intrinsic arguments also demand lane 0, even when another lane
+  // is the first active lane of the call.
+  bool HasUnsafeScalarArg =
+      ID && any_of(enumerate(CI->args()), [&](auto Arg) {
+        return isVectorIntrinsicWithScalarOpAtArg(ID, Arg.index(),
+                                                  &CostCtx.TTI) &&
+               RecipeBuilder.dependsOnPredicatedDivRem(Arg.value());
+      });
+
   // Prefer the intrinsic if it is at least as cheap as scalarizing and any
-  // available vector variant.
-  if (ID) {
+  // available vector variant, and its scalar arguments can use lane 0.
+  if (ID && !HasUnsafeScalarArg) {
     InstructionCost IntrinsicCost =
         VPWidenIntrinsicRecipe::computeCallCost(ID, Ops, VPI, VF, CostCtx);
     if (IntrinsicCost.isValid() && ScalarCost >= IntrinsicCost &&
@@ -6206,10 +6232,11 @@ bool VPlanTransforms::makeCallWideningDecisions(VPlan &Plan, VFRange &Range,
                                     VPI.op_begin() + CI->arg_size());
 
       CallWideningDecision Decision =
-          decideCallWidening(VPI, Ops, Range.Start, CostCtx);
+          decideCallWidening(VPI, Ops, Range.Start, CostCtx, RecipeBuilder);
       LoopVectorizationPlanner::getDecisionAndClampRange(
           [&](ElementCount VF) {
-            return Decision == decideCallWidening(VPI, Ops, VF, CostCtx);
+            return Decision ==
+                   decideCallWidening(VPI, Ops, VF, CostCtx, RecipeBuilder);
           },
           Range);
 
