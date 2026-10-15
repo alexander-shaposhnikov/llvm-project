@@ -1117,11 +1117,9 @@ Serializer::processOp<spirv::FunctionCallOp>(spirv::FunctionCallOp op) {
   return success();
 }
 
-template <>
-LogicalResult
-Serializer::processOp<spirv::CopyMemoryOp>(spirv::CopyMemoryOp op) {
+template <typename OpTy>
+LogicalResult Serializer::processCopyMemoryOp(OpTy op, spirv::Opcode opcode) {
   SmallVector<uint32_t, 4> operands;
-  SmallVector<StringRef, 2> elidedAttrs;
 
   for (Value operand : op->getOperands()) {
     auto id = getValueID(operand);
@@ -1129,35 +1127,37 @@ Serializer::processOp<spirv::CopyMemoryOp>(spirv::CopyMemoryOp op) {
     operands.push_back(id);
   }
 
-  StringAttr memoryAccess = op.getMemoryAccessAttrName();
   if (std::optional<spirv::MemoryAccess> value = op.getMemoryAccess())
     operands.push_back(static_cast<uint32_t>(*value));
 
-  elidedAttrs.push_back(memoryAccess.strref());
-
-  StringAttr alignment = op.getAlignmentAttrName();
   if (std::optional<uint32_t> value = op.getAlignment())
     operands.push_back(*value);
 
-  elidedAttrs.push_back(alignment.strref());
-
-  StringAttr sourceMemoryAccess = op.getSourceMemoryAccessAttrName();
   if (std::optional<spirv::MemoryAccess> value = op.getSourceMemoryAccess())
     operands.push_back(static_cast<uint32_t>(*value));
 
-  elidedAttrs.push_back(sourceMemoryAccess.strref());
-
-  StringAttr sourceAlignment = op.getSourceAlignmentAttrName();
   if (std::optional<uint32_t> value = op.getSourceAlignment())
     operands.push_back(*value);
 
-  elidedAttrs.push_back(sourceAlignment.strref());
   if (failed(emitDebugLine(functionBody, op.getLoc())))
     return failure();
-  encodeInstructionInto(functionBody, spirv::Opcode::OpCopyMemory, operands);
+  encodeInstructionInto(functionBody, opcode, operands);
 
   return success();
 }
+
+template <>
+LogicalResult
+Serializer::processOp<spirv::CopyMemoryOp>(spirv::CopyMemoryOp op) {
+  return processCopyMemoryOp(op, spirv::Opcode::OpCopyMemory);
+}
+
+template <>
+LogicalResult
+Serializer::processOp<spirv::CopyMemorySizedOp>(spirv::CopyMemorySizedOp op) {
+  return processCopyMemoryOp(op, spirv::Opcode::OpCopyMemorySized);
+}
+
 template <>
 LogicalResult Serializer::processOp<spirv::GenericCastToPtrExplicitOp>(
     spirv::GenericCastToPtrExplicitOp op) {

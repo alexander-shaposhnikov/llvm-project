@@ -549,6 +549,76 @@ LogicalResult CopyMemoryOp::verify() {
 }
 
 //===----------------------------------------------------------------------===//
+// spirv.CopyMemorySized
+//===----------------------------------------------------------------------===//
+
+void CopyMemorySizedOp::print(OpAsmPrinter &printer) {
+  printer << ' ' << getTarget() << ", " << getSource() << ", " << getSize();
+
+  SmallVector<StringRef, 4> elidedAttrs;
+  printMemoryAccessAttribute(*this, printer, elidedAttrs);
+  printSourceMemoryAccessAttribute(*this, printer, elidedAttrs,
+                                   getSourceMemoryAccess(),
+                                   getSourceAlignment());
+
+  printer.printOptionalAttrDict(
+      (*this)->getDiscardableAttrDictionary().getValue(), elidedAttrs);
+
+  printer << " : " << getTarget().getType() << ", " << getSource().getType()
+          << ", " << getSize().getType();
+}
+
+ParseResult CopyMemorySizedOp::parse(OpAsmParser &parser,
+                                     OperationState &result) {
+  SmallVector<OpAsmParser::UnresolvedOperand, 3> operandInfo;
+  SMLoc loc = parser.getCurrentLocation();
+  if (parser.parseOperandList(operandInfo, 3) ||
+      parseMemoryAccessAttributes<CopyMemorySizedOp>(parser, result))
+    return failure();
+
+  if (!parser.parseOptionalComma()) {
+    // Parse 2nd memory access attributes.
+    if (parseSourceMemoryAccessAttributes<CopyMemorySizedOp>(parser, result))
+      return failure();
+  }
+
+  SmallVector<Type, 3> operandTypes;
+  if (parser.parseOptionalAttrDict(result.attributes) || parser.parseColon() ||
+      parser.parseTypeList(operandTypes))
+    return failure();
+
+  return parser.resolveOperands(operandInfo, operandTypes, loc,
+                                result.operands);
+}
+
+LogicalResult CopyMemorySizedOp::verify() {
+  // SPIR-V spec: "If it is a constant instruction, the constant value must
+  // not be 0. It is invalid for both the constant's type to have Signedness
+  // of 1 and to have the sign bit set."
+  if (auto constOp = getSize().getDefiningOp<spirv::ConstantOp>()) {
+    if (auto sizeAttr = dyn_cast<IntegerAttr>(constOp.getValue())) {
+      APInt size = sizeAttr.getValue();
+      if (size.isZero())
+        return emitOpError("size must not be a constant zero");
+      if (sizeAttr.getType().isSignedInteger() && size.isNegative())
+        return emitOpError("size must not be a negative signed constant");
+    }
+  }
+
+  // A lone mask applies to both operands. Only the first of two masks is
+  // Target-only.
+  MemoryAccessKind targetKind = getSourceMemoryAccess()
+                                    ? MemoryAccessKind::Write
+                                    : MemoryAccessKind::ReadWrite;
+  if (failed(verifyMemoryAccessAttribute(*this, targetKind)))
+    return failure();
+
+  return verifyMemoryAccessAttribute(
+      getOperation(), getSourceMemoryAccessAttr(), getSourceAlignmentAttr(),
+      MemoryAccessKind::Read);
+}
+
+//===----------------------------------------------------------------------===//
 // spirv.InBoundsPtrAccessChainOp
 //===----------------------------------------------------------------------===//
 

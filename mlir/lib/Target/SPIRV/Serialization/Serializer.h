@@ -376,6 +376,12 @@ private:
     return op.emitError("unsupported op serialization");
   }
 
+  /// Serializes a spirv.CopyMemory or spirv.CopyMemorySized op as the
+  /// instruction with the given `opcode`. Both ops share the same encoding of
+  /// their (up to two) optional memory operands masks.
+  template <typename OpTy>
+  LogicalResult processCopyMemoryOp(OpTy op, spirv::Opcode opcode);
+
   //===--------------------------------------------------------------------===//
   // Utilities
   //===--------------------------------------------------------------------===//
