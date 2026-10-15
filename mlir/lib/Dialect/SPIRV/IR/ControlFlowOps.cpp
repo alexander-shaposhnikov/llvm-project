@@ -305,6 +305,30 @@ Block *SwitchOp::getSuccessorForOperands(ArrayRef<Attribute> operands) {
 }
 
 //===----------------------------------------------------------------------===//
+// spirv.LifetimeStart / spirv.LifetimeStop
+//===----------------------------------------------------------------------===//
+
+template <typename LifetimeOpTy>
+static LogicalResult verifyLifetimeOp(LifetimeOpTy op) {
+  auto ptrType = cast<spirv::PointerType>(op.getPointer().getType());
+  if (ptrType.getStorageClass() != spirv::StorageClass::Function)
+    return op.emitOpError("pointer must have the Function storage class");
+
+  // SPIR-V spec: "Size must be 0 if Pointer is a pointer to a non-void type
+  // or the Addresses capability is not declared." The dialect has no void
+  // type; untyped memory is modeled as a pointer to i8 instead.
+  if (op.getSize() != 0 && !ptrType.getPointeeType().isInteger(8))
+    return op.emitOpError(
+        "size must be 0 unless the pointer points to an 8-bit integer");
+
+  return success();
+}
+
+LogicalResult LifetimeStartOp::verify() { return verifyLifetimeOp(*this); }
+
+LogicalResult LifetimeStopOp::verify() { return verifyLifetimeOp(*this); }
+
+//===----------------------------------------------------------------------===//
 // spirv.mlir.loop
 //===----------------------------------------------------------------------===//
 

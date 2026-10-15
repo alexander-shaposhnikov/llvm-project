@@ -1081,6 +1081,62 @@ func.func @kill() {
 // -----
 
 //===----------------------------------------------------------------------===//
+// spirv.LifetimeStart / spirv.LifetimeStop
+//===----------------------------------------------------------------------===//
+
+// CHECK-LABEL: func @lifetime
+func.func @lifetime() {
+  %0 = spirv.Variable : !spirv.ptr<f32, Function>
+  // CHECK: spirv.LifetimeStart %{{.*}}, 0 : !spirv.ptr<f32, Function>
+  spirv.LifetimeStart %0, 0 : !spirv.ptr<f32, Function>
+  // CHECK: spirv.LifetimeStop %{{.*}}, 0 : !spirv.ptr<f32, Function>
+  spirv.LifetimeStop %0, 0 : !spirv.ptr<f32, Function>
+
+  %1 = spirv.Bitcast %0 : !spirv.ptr<f32, Function> to !spirv.ptr<i8, Function>
+  // CHECK: spirv.LifetimeStart %{{.*}}, 4 : !spirv.ptr<i8, Function>
+  spirv.LifetimeStart %1, 4 : !spirv.ptr<i8, Function>
+  // CHECK: spirv.LifetimeStop %{{.*}}, 4 : !spirv.ptr<i8, Function>
+  spirv.LifetimeStop %1, 4 : !spirv.ptr<i8, Function>
+  spirv.Return
+}
+
+// -----
+
+func.func @lifetime_start_wrong_storage_class(%arg0: !spirv.ptr<f32, CrossWorkgroup>) {
+  // expected-error @+1 {{pointer must have the Function storage class}}
+  spirv.LifetimeStart %arg0, 0 : !spirv.ptr<f32, CrossWorkgroup>
+  spirv.Return
+}
+
+// -----
+
+func.func @lifetime_stop_wrong_storage_class(%arg0: !spirv.ptr<f32, CrossWorkgroup>) {
+  // expected-error @+1 {{pointer must have the Function storage class}}
+  spirv.LifetimeStop %arg0, 0 : !spirv.ptr<f32, CrossWorkgroup>
+  spirv.Return
+}
+
+// -----
+
+func.func @lifetime_start_size_on_typed_pointer() {
+  %0 = spirv.Variable : !spirv.ptr<f32, Function>
+  // expected-error @+1 {{size must be 0 unless the pointer points to an 8-bit integer}}
+  spirv.LifetimeStart %0, 4 : !spirv.ptr<f32, Function>
+  spirv.Return
+}
+
+// -----
+
+func.func @lifetime_stop_size_on_typed_pointer() {
+  %0 = spirv.Variable : !spirv.ptr<f32, Function>
+  // expected-error @+1 {{size must be 0 unless the pointer points to an 8-bit integer}}
+  spirv.LifetimeStop %0, 4 : !spirv.ptr<f32, Function>
+  spirv.Return
+}
+
+// -----
+
+//===----------------------------------------------------------------------===//
 // spirv.Switch
 //===----------------------------------------------------------------------===//
 
