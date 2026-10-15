@@ -53,6 +53,11 @@ public:
   /// FIXME: Fully migrate logic to determine if mask is needed to VPlan.
   bool isPredicatedInst(Instruction *I) const;
 
+  /// Whether \p V depends on a div/rem predicated in the scalar loop.
+  /// FIXME: Migrate this check to the VPValue def chain along with
+  /// isPredicatedInst.
+  bool dependsOnPredicatedDivRem(Value *V) const;
+
   /// Returns true if the target prefers vectorized addressing.
   bool prefersVectorizedAddressing() const;
 
