@@ -1096,6 +1096,44 @@ VPValue *VPSCEVExpander::expandImpl(const SCEV *S) {
     if (S->getType()->isPointerTy())
       return expandAsPtrAdd(AddE);
 
+    // Expand a urem, which may be truncated, scaled and part of a larger sum,
+    // as such, matching SCEVExpander.
+    std::optional<SCEVExpander::AffineURem> M =
+        SCEVExpander::matchAffineURem(AddE, SE);
+    if (M && (!SafeUDivMode ||
+              (SE.isKnownNonZero(M->RHS) &&
+               ScalarEvolution::isGuaranteedNotToBePoison(M->RHS)))) {
+      const SCEV *URem = SE.getURemExpr(M->LHS, M->RHS);
+      if (S == URem) {
+        VPValue *LHS = expand(M->LHS);
+        VPValue *RHS = expand(M->RHS);
+        return Builder.createNaryOp(
+            Instruction::URem, {LHS, RHS},
+            VPIRFlags::getDefaultFlags(Instruction::URem), DL);
+      }
+
+      Type *Ty = S->getType();
+      const SCEV *TruncURem = SE.getTruncateOrNoop(URem, Ty);
+      if (S == TruncURem)
+        return Builder.createScalarCast(Instruction::Trunc, expand(URem), Ty,
+                                        DL);
+
+      // Expand the urem on its own, which may reuse an existing value, then
+      // scale and offset it. For negative scales, subtract the urem scaled by
+      // the negated scale instead. This also holds for the minimum signed
+      // value, which is its own negation.
+      VPValue *V = expand(TruncURem);
+      APInt AbsScale = M->Scale.abs();
+      if (!AbsScale.isOne())
+        V = Builder.createOverflowingOp(
+            Instruction::Mul, {V, Builder.getPlan().getConstantInt(AbsScale)},
+            {false, false}, DL);
+      if (M->Scale.isNegative())
+        return Builder.createSub(expand(M->Offset), V, DL);
+      return M->Offset->isZero() ? V
+                                 : Builder.createAdd(expand(M->Offset), V, DL);
+    }
+
     // Iterate in reverse so that constants are emitted last.
     SmallVector<const SCEV *, 2> SCEVOps(reverse(AddE->operands()));
     // Sum the invariant operands separately, so the sum can be hoisted.

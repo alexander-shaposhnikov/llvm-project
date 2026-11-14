@@ -1035,4 +1035,260 @@ TEST_F(ScalarEvolutionExpanderTest, InsertBinopReuseShlWithMatchingFlags) {
   EXPECT_TRUE(ShlInst->hasNoSignedWrap());
 }
 
+// Test recognizing urems that are truncated, scaled and/or part of a larger
+// sum.
+TEST_F(ScalarEvolutionExpanderTest, MatchAffineURem) {
+  LLVMContext C;
+  SMDiagnostic Err;
+  std::unique_ptr<Module> M = parseAssemblyString(R"(
+    define void @f(i64 %x, i64 %y, i64 %z, i32 %d, i8 %a, i8 %b, i1 %c) {
+    entry:
+      br label %loop
+    loop:
+      %iv = phi i64 [ %x, %entry ], [ %iv.next, %loop ]
+      %iv.next = add i64 %iv, 1
+      br i1 %c, label %loop, label %exit
+    exit:
+      ret void
+    }
+  )",
+                                                  Err, C);
+  ASSERT_TRUE(M && !verifyModule(*M, &errs()));
+
+  runWithSE(*M, "f", [&](Function &F, LoopInfo &LI, ScalarEvolution &SE) {
+    Type *I64Ty = Type::getInt64Ty(C);
+    Type *I32Ty = Type::getInt32Ty(C);
+    Type *I8Ty = Type::getInt8Ty(C);
+    const SCEV *X = SE.getSCEV(F.getArg(0));
+    const SCEV *Y = SE.getSCEV(F.getArg(1));
+    const SCEV *Z = SE.getSCEV(F.getArg(2));
+    const SCEV *D = SE.getZeroExtendExpr(SE.getSCEV(F.getArg(3)), I64Ty);
+    const SCEV *A = SE.getSCEV(F.getArg(4));
+    const SCEV *B = SE.getSCEV(F.getArg(5));
+    const SCEV *IV = SE.getSCEV(&GetInstByName(F, "iv"));
+    auto Const = [&](int64_t V, Type *Ty) {
+      return SE.getConstant(Ty, V, /*isSigned=*/true);
+    };
+    auto Scaled = [&](int64_t Scale, const SCEV *S) {
+      return SE.getMulExpr(Const(Scale, S->getType()), S);
+    };
+
+    // Returns true if S is matched as
+    // Offset + Scale * trunc_or_noop(LHS urem RHS).
+    auto Matches = [&](const SCEV *S, const SCEV *LHS, const SCEV *RHS,
+                       int64_t Scale, const SCEV *Offset) {
+      auto URem = SCEVExpander::matchAffineURem(cast<SCEVAddExpr>(S), SE);
+      return URem && URem->LHS == LHS && URem->RHS == RHS &&
+             URem->Scale.getSExtValue() == Scale && URem->Offset == Offset;
+    };
+    auto MatchesAny = [&](const SCEV *S) {
+      const auto *Add = dyn_cast<SCEVAddExpr>(S);
+      return Add && SCEVExpander::matchAffineURem(Add, SE);
+    };
+    const SCEV *Zero = Const(0, I64Ty);
+    const SCEV *XRemY = SE.getURemExpr(X, Y);
+
+    // The urem itself, also with a constant LHS, which sorts before the
+    // multiple of the divisor in the add.
+    EXPECT_TRUE(Matches(XRemY, X, Y, 1, Zero));
+    const SCEV *C100 = Const(100, I64Ty);
+    EXPECT_TRUE(Matches(SE.getURemExpr(C100, Y), C100, Y, 1, Zero));
+
+    // Scaled and negated urems.
+    EXPECT_TRUE(Matches(Scaled(256, XRemY), X, Y, 256, Zero));
+    EXPECT_TRUE(Matches(Scaled(-256, XRemY), X, Y, -256, Zero));
+    EXPECT_TRUE(Matches(SE.getNegativeSCEV(XRemY), X, Y, -1, Zero));
+    EXPECT_TRUE(Matches(Scaled(INT64_MIN, XRemY), X, Y, INT64_MIN, Zero));
+
+    // Divisors that are products. Their constant factor is folded into the
+    // scale.
+    const SCEV *C6 = Const(6, I64Ty);
+    EXPECT_TRUE(Matches(Scaled(64, SE.getURemExpr(X, C6)), X, C6, 64, Zero));
+    const SCEV *Y3 = Scaled(3, Y);
+    EXPECT_TRUE(Matches(Scaled(-5, SE.getURemExpr(X, Y3)), X, Y3, -5, Zero));
+    const SCEV *YZ = SE.getMulExpr(Y, Z);
+    EXPECT_TRUE(Matches(Scaled(4, SE.getURemExpr(X, YZ)), X, YZ, 4, Zero));
+
+    // Urems that are part of a larger sum. The multiple of the LHS may be
+    // folded into another operand or a constant.
+    EXPECT_TRUE(Matches(SE.getMinusSCEV(Z, Scaled(256, SE.getURemExpr(IV, D))),
+                        IV, D, -256, Z));
+    const SCEV *XPlus1 = SE.getAddExpr(X, Const(1, I64Ty));
+    EXPECT_TRUE(
+        Matches(SE.getMinusSCEV(SE.getURemExpr(XPlus1, Y), Const(1, I64Ty)),
+                XPlus1, Y, 1, Const(-1, I64Ty)));
+    const SCEV *C100DivY = SE.getMulExpr(SE.getUDivExpr(C100, Y), Y);
+    EXPECT_TRUE(Matches(SE.getMinusSCEV(Const(5, I64Ty), C100DivY), C100, Y, 1,
+                        Const(-95, I64Ty)));
+
+    // Truncated urems, where the truncate is not pushed into the multiple of
+    // the divisor (Y) or pushed into it (D and constants), and with scaling
+    // before and after truncating.
+    const SCEV *Zero32 = Const(0, I32Ty);
+    EXPECT_TRUE(
+        Matches(SE.getTruncateExpr(Scaled(4, SE.getURemExpr(IV, Y)), I32Ty), IV,
+                Y, 4, Zero32));
+    EXPECT_TRUE(Matches(
+        SE.getMinusSCEV(Const(2048, I32Ty),
+                        SE.getTruncateExpr(SE.getURemExpr(IV, Y), I32Ty)),
+        IV, Y, -1, Const(2048, I32Ty)));
+    EXPECT_TRUE(
+        Matches(Scaled(4, SE.getTruncateExpr(SE.getURemExpr(IV, D), I32Ty)), IV,
+                D, 4, Zero32));
+    EXPECT_TRUE(Matches(SE.getTruncateExpr(SE.getURemExpr(IV, C6), I32Ty), IV,
+                        C6, 1, Zero32));
+
+    // Narrow urems. The scale is not recovered if its product with the
+    // constant factor of the divisor wraps.
+    const SCEV *Zero8 = Const(0, I8Ty);
+    EXPECT_TRUE(Matches(Scaled(-128, SE.getURemExpr(A, B)), A, B, -128, Zero8));
+    const SCEV *C60 = Const(60, I8Ty);
+    EXPECT_TRUE(Matches(Scaled(2, SE.getURemExpr(A, C60)), A, C60, 2, Zero8));
+    EXPECT_FALSE(MatchesAny(Scaled(2, SE.getURemExpr(A, Const(100, I8Ty)))));
+
+    // Do not match if the multiple of the LHS does not cancel out, for
+    // non-constant scales, or for constant power-of-2 divisors.
+    const SCEV *XDivY = SE.getMulExpr(SE.getUDivExpr(X, Y), Y);
+    EXPECT_FALSE(MatchesAny(SE.getMinusSCEV(Z, XDivY)));
+    EXPECT_FALSE(MatchesAny(SE.getMinusSCEV(X, Scaled(2, XDivY))));
+    EXPECT_FALSE(MatchesAny(SE.getMulExpr(Z, XRemY)));
+    const SCEV *C8 = Const(8, I64Ty);
+    const SCEV *XDiv8 = SE.getMulExpr(SE.getUDivExpr(X, C8), C8);
+    EXPECT_FALSE(MatchesAny(SE.getAddExpr(Z, SE.getMinusSCEV(X, XDiv8))));
+  });
+}
+
+// Test that urems that are truncated, scaled and/or part of a larger sum are
+// expanded as urem, instead of udiv, mul and sub.
+TEST_F(ScalarEvolutionExpanderTest, ExpandAffineURem) {
+  LLVMContext C;
+  SMDiagnostic Err;
+  std::unique_ptr<Module> M = parseAssemblyString(R"(
+    define void @f(i64 %x, i64 %y, i64 %z, i32 %a, i32 %b,
+                   i64 range(i64 1, 100) %nz) {
+    entry:
+      %rem = urem i64 %x, %y
+      br label %exit
+    exit:
+      ret void
+    }
+  )",
+                                                  Err, C);
+  ASSERT_TRUE(M && !verifyModule(*M, &errs()));
+
+  Function *F = M->getFunction("f");
+  ScalarEvolution SE = buildSE(*F);
+  Type *I64Ty = Type::getInt64Ty(C);
+  Type *I32Ty = Type::getInt32Ty(C);
+  Argument *XV = F->getArg(0), *YV = F->getArg(1), *ZV = F->getArg(2);
+  Argument *AV = F->getArg(3), *BV = F->getArg(4), *NZV = F->getArg(5);
+  const SCEV *X = SE.getSCEV(XV);
+  const SCEV *Y = SE.getSCEV(YV);
+  const SCEV *Z = SE.getSCEV(ZV);
+  Instruction *Rem = &GetInstByName(*F, "rem");
+  EXPECT_EQ(SE.getSCEV(Rem), SE.getURemExpr(X, Y));
+  Instruction *InsertPt = F->back().getTerminator();
+  SCEVExpander Exp(SE, "expander");
+
+  // z - 256 * (x urem y) reuses %rem.
+  const SCEV *ScaledRem =
+      SE.getMulExpr(SE.getConstant(I64Ty, 256), SE.getURemExpr(X, Y));
+  Value *V =
+      Exp.expandCodeFor(SE.getMinusSCEV(Z, ScaledRem), nullptr, InsertPt);
+  EXPECT_TRUE(match(
+      V, m_Sub(m_Specific(ZV), m_Shl(m_Specific(Rem), m_SpecificInt(8)))));
+
+  // (x urem y) + (z urem y) contains two urems.
+  V = Exp.expandCodeFor(
+      SE.getAddExpr(SE.getURemExpr(X, Y), SE.getURemExpr(Z, Y)), nullptr,
+      InsertPt);
+  EXPECT_TRUE(match(
+      V, m_c_Add(m_Specific(Rem), m_URem(m_Specific(ZV), m_Specific(YV)))));
+
+  // z - ((z + 1) /u y) * y is ((z + 1) urem y) - 1.
+  const SCEV *ZPlus1 = SE.getAddExpr(Z, SE.getOne(I64Ty));
+  V = Exp.expandCodeFor(
+      SE.getMinusSCEV(Z, SE.getMulExpr(SE.getUDivExpr(ZPlus1, Y), Y)), nullptr,
+      InsertPt);
+  EXPECT_TRUE(
+      match(V, m_Add(m_URem(m_Add(m_Specific(ZV), m_One()), m_Specific(YV)),
+                     m_AllOnes())));
+
+  // 4 * trunc(zext(a) urem zext(b)), with the truncate pushed into the
+  // operands of the add and mul representing the urem.
+  const SCEV *WideRem =
+      SE.getURemExpr(SE.getZeroExtendExpr(SE.getSCEV(AV), I64Ty),
+                     SE.getZeroExtendExpr(SE.getSCEV(BV), I64Ty));
+  ASSERT_TRUE(isa<SCEVAddExpr>(SE.getTruncateExpr(WideRem, I32Ty)));
+  V = Exp.expandCodeFor(SE.getMulExpr(SE.getConstant(I32Ty, 4),
+                                      SE.getTruncateExpr(WideRem, I32Ty)),
+                        nullptr, InsertPt);
+  EXPECT_TRUE(match(
+      V, m_Shl(m_Trunc(m_URem(m_ZExt(m_Specific(AV)), m_ZExt(m_Specific(BV)))),
+               m_SpecificInt(2))));
+
+  for (Instruction &I : instructions(*F))
+    EXPECT_NE(I.getOpcode(), Instruction::UDiv);
+
+  // In SafeUDivMode, a urem is only expanded as such if its divisor cannot be
+  // zero or poison. Otherwise it is expanded with a guarded udiv. %y may be
+  // zero, but cannot be poison as it is the divisor of %rem. %nz cannot be
+  // zero, but may be poison.
+  SCEVExpander SafeExp(SE, "expander", /*PreserveLCSSA=*/true,
+                       /*SafeUDivMode=*/true);
+  V = SafeExp.expandCodeFor(SE.getURemExpr(Z, SE.getConstant(I64Ty, 6)),
+                            nullptr, InsertPt);
+  EXPECT_TRUE(match(V, m_URem(m_Specific(ZV), m_SpecificInt(6))));
+  V = SafeExp.expandCodeFor(SE.getURemExpr(Z, Y), nullptr, InsertPt);
+  EXPECT_TRUE(match(
+      V, m_Sub(m_Specific(ZV),
+               m_c_Mul(m_UDiv(m_Specific(ZV), m_UMax(m_Specific(YV), m_One())),
+                       m_Specific(YV)))));
+  V = SafeExp.expandCodeFor(SE.getURemExpr(Z, SE.getSCEV(NZV)), nullptr,
+                            InsertPt);
+  EXPECT_TRUE(
+      match(V, m_Sub(m_Specific(ZV),
+                     m_c_Mul(m_UDiv(m_Specific(ZV),
+                                    m_UMax(m_Freeze(m_Specific(NZV)), m_One())),
+                             m_Specific(NZV)))));
+  EXPECT_FALSE(verifyFunction(*F, &errs()));
+}
+
+// Test that a urem with a divisor known to be non-zero is hoisted out of loops
+// like the udiv it replaces.
+TEST_F(ScalarEvolutionExpanderTest, ExpandAffineURemHoist) {
+  LLVMContext C;
+  SMDiagnostic Err;
+  std::unique_ptr<Module> M = parseAssemblyString(R"(
+    define void @f(i64 %x, i64 range(i64 1, 100) %y, i64 %n) {
+    entry:
+      br label %loop
+    loop:
+      %iv = phi i64 [ 0, %entry ], [ %iv.next, %loop ]
+      %iv.next = add i64 %iv, 1
+      %c = icmp ult i64 %iv.next, %n
+      br i1 %c, label %loop, label %exit
+    exit:
+      ret void
+    }
+  )",
+                                                  Err, C);
+  ASSERT_TRUE(M && !verifyModule(*M, &errs()));
+
+  Function *F = M->getFunction("f");
+  ScalarEvolution SE = buildSE(*F);
+  Argument *XV = F->getArg(0), *YV = F->getArg(1);
+  const SCEV *ScaledRem =
+      SE.getMulExpr(SE.getConstant(XV->getType(), 256),
+                    SE.getURemExpr(SE.getSCEV(XV), SE.getSCEV(YV)));
+  SCEVExpander Exp(SE, "expander");
+  Value *V = Exp.expandCodeFor(
+      ScaledRem, nullptr, GetInstByName(*F, "iv").getParent()->getTerminator());
+  Value *Rem;
+  ASSERT_TRUE(match(V, m_Shl(m_Value(Rem), m_SpecificInt(8))));
+  EXPECT_TRUE(match(Rem, m_URem(m_Specific(XV), m_Specific(YV))));
+  EXPECT_EQ(cast<Instruction>(Rem)->getParent(), &F->getEntryBlock());
+  EXPECT_FALSE(verifyFunction(*F, &errs()));
+}
+
 } // end namespace llvm

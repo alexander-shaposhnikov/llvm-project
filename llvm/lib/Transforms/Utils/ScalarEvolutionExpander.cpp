@@ -513,15 +513,107 @@ public:
 
 }
 
+std::optional<SCEVExpander::AffineURem>
+SCEVExpander::matchAffineURem(const SCEVAddExpr *S, ScalarEvolution &SE) {
+  Type *Ty = S->getType();
+  if (Ty->isPointerTy())
+    return std::nullopt;
+  unsigned BitWidth = SE.getTypeSizeInBits(Ty);
+
+  // The urem itself. Unlike the code below, m_scev_URem also matches if
+  // LHS /u RHS has been folded.
+  const SCEV *LHS, *RHS;
+  if (match(S, m_scev_URem(m_SCEV(LHS), m_SCEV(RHS), SE)))
+    return AffineURem{LHS, RHS, APInt(BitWidth, 1), SE.getZero(Ty)};
+
+  // Returns the constant operand of the product \p P, or 1 if it has none.
+  const APInt *C;
+  auto GetConstantFactor = [&](const SCEV *P) {
+    if (const auto *Mul = dyn_cast<SCEVMulExpr>(P))
+      P = Mul->getOperand(0);
+    return match(P, m_scev_APInt(C))
+               ? *C
+               : APInt(SE.getTypeSizeInBits(P->getType()), 1);
+  };
+
+  // LHS urem RHS is LHS - (LHS /u RHS) * RHS. Look for an operand that is a
+  // multiple of (LHS /u RHS) * RHS, to find the urem and guess its scale.
+  auto Quotient = m_scev_UDiv(m_SCEV(LHS), m_SCEV(RHS));
+  for (const SCEV *Op : S->operands()) {
+    // The product is truncated as a whole if its operands cannot be truncated
+    // individually, and may be scaled before and after truncating.
+    APInt OuterScale(BitWidth, 1);
+    const SCEVMulExpr *Mul;
+    if (match(Op, m_scev_Mul(m_scev_APInt(C), m_scev_Trunc(m_scev_Mul(Mul)))))
+      OuterScale = *C;
+    else if (!match(Op, m_CombineOr(m_scev_Mul(Mul),
+                                    m_scev_Trunc(m_scev_Mul(Mul)))))
+      continue;
+    Type *MulTy = Mul->getType();
+
+    for (const SCEV *MulOp : Mul->operands()) {
+      if (!match(MulOp, m_CombineOr(Quotient, m_scev_Trunc(Quotient))))
+        continue;
+
+      // A urem by a constant power of 2 is not expressed with a udiv, and
+      // (LHS /u RHS) * RHS is cheap to expand for such divisors.
+      if (match(RHS, m_scev_APInt(C)) && C->isPowerOf2())
+        continue;
+
+      // The constant factor of RHS is folded into the one of Mul, so the
+      // scale is their ratio, unless their product wrapped.
+      APInt DivisorC = GetConstantFactor(SE.getTruncateOrNoop(RHS, MulTy));
+      if (DivisorC.isZero())
+        continue;
+      APInt InnerScale = -GetConstantFactor(Mul).sdiv(DivisorC);
+
+      // Subtract the urem scaled like Op from S. S is the sum of the scaled
+      // urem and the resulting offset, whether the scale is right or not.
+      const SCEV *URem = SE.getTruncateOrNoop(SE.getURemExpr(LHS, RHS), MulTy);
+      const SCEV *ScaledURem = SE.getTruncateOrNoop(
+          SE.getMulExpr(SE.getConstant(InnerScale), URem), Ty);
+      const SCEV *Offset = SE.getMinusSCEV(
+          S, SE.getMulExpr(SE.getConstant(OuterScale), ScaledURem));
+
+      // Expanding the urem is only cheaper if both Op and the multiple of LHS
+      // cancel out, leaving a constant or less than the other operands of S.
+      // It then replaces a udiv and a mul by RHS.
+      const SCEV *Rest = SE.getMinusSCEV(S, Op);
+      if (isa<SCEVConstant>(Offset) ||
+          Offset->getExpressionSize() < Rest->getExpressionSize())
+        return AffineURem{LHS, RHS, OuterScale * InnerScale.trunc(BitWidth),
+                          Offset};
+    }
+  }
+  return std::nullopt;
+}
+
 Value *SCEVExpander::visitAddExpr(SCEVUseT<const SCEVAddExpr *> S) {
-  // Recognize the canonical representation of an unsimplifed urem.
-  const SCEV *URemLHS = nullptr;
-  const SCEV *URemRHS = nullptr;
-  if (match(S, m_scev_URem(m_SCEV(URemLHS), m_SCEV(URemRHS), SE))) {
-    Value *LHS = expand(URemLHS);
-    Value *RHS = expand(URemRHS);
-    return InsertBinop(Instruction::URem, LHS, RHS, SCEV::FlagNone,
-                       /*IsSafeToHoist*/ false);
+  // Recognize a urem, which may be truncated, scaled and part of a larger sum.
+  // In SafeUDivMode, the divisor must not be zero or poison. Otherwise leave
+  // it to the expansion of the udiv below to guard the divisor.
+  std::optional<AffineURem> M = matchAffineURem(S, SE);
+  if (M &&
+      (!SafeUDivMode || (SE.isKnownNonZero(M->RHS) &&
+                         ScalarEvolution::isGuaranteedNotToBePoison(M->RHS)))) {
+    const SCEV *URem = SE.getURemExpr(M->LHS, M->RHS);
+    if (S.getPointer() == URem) {
+      Value *LHS = expand(M->LHS);
+      Value *RHS = expand(M->RHS);
+      return InsertBinop(Instruction::URem, LHS, RHS, SCEV::FlagNone,
+                         /*IsSafeToHoist*/ SE.isKnownNonZero(M->RHS));
+    }
+
+    Type *Ty = S->getType();
+    const SCEV *TruncURem = SE.getTruncateOrNoop(URem, Ty);
+    if (S.getPointer() == TruncURem)
+      return Builder.CreateTrunc(expand(URem), Ty);
+
+    // Expand the urem on its own, which may reuse an existing value, and S in
+    // terms of the expanded urem.
+    const SCEV *URemV = SE.getUnknown(expand(TruncURem));
+    return expand(SE.getAddExpr(
+        M->Offset, SE.getMulExpr(SE.getConstant(M->Scale), URemV)));
   }
 
   // -C + umax(C, X) --> usub.sat(X, C)

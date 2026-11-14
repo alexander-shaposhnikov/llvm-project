@@ -215,11 +215,9 @@ define i32 @vscale_slt_with_vp_umin(ptr nocapture %A, i32 %n) mustprogress vscal
 ; ALWAYS-NEXT:    br i1 [[CMP]], label [[FOR_BODY]], label [[FOR_END:%.*]]
 ; ALWAYS:       for.end:
 ; ALWAYS-NEXT:    [[TMP0:%.*]] = add nsw i32 [[N]], -1
-; ALWAYS-NEXT:    [[TMP1:%.*]] = call range(i32 2, 33) i32 @llvm.cttz.i32(i32 [[VF]], i1 true)
-; ALWAYS-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0]], [[TMP1]]
-; ALWAYS-NEXT:    [[TMP3:%.*]] = mul i32 [[TMP2]], [[VSCALE]]
-; ALWAYS-NEXT:    [[TMP4:%.*]] = shl i32 [[TMP3]], 2
-; ALWAYS-NEXT:    [[TMP5:%.*]] = sub i32 [[N]], [[TMP4]]
+; ALWAYS-NEXT:    [[TMP1:%.*]] = add nsw i32 [[VF]], -1
+; ALWAYS-NEXT:    [[TMP2:%.*]] = and i32 [[TMP0]], [[TMP1]]
+; ALWAYS-NEXT:    [[TMP5:%.*]] = add nuw nsw i32 [[TMP2]], 1
 ; ALWAYS-NEXT:    [[UMIN:%.*]] = call i32 @llvm.umin.i32(i32 [[VF]], i32 [[TMP5]])
 ; ALWAYS-NEXT:    ret i32 [[UMIN]]
 ;
@@ -289,11 +287,9 @@ define i32 @vscale_slt_with_vp_umin2(ptr nocapture %A, i32 %n) mustprogress vsca
 ; ALWAYS-NEXT:    br i1 [[CMP]], label [[FOR_BODY]], label [[FOR_END:%.*]]
 ; ALWAYS:       for.end:
 ; ALWAYS-NEXT:    [[TMP0:%.*]] = add i32 [[N]], -1
-; ALWAYS-NEXT:    [[TMP1:%.*]] = call range(i32 2, 33) i32 @llvm.cttz.i32(i32 [[VF]], i1 true)
-; ALWAYS-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0]], [[TMP1]]
-; ALWAYS-NEXT:    [[TMP3:%.*]] = mul i32 [[TMP2]], [[VSCALE]]
-; ALWAYS-NEXT:    [[TMP4:%.*]] = shl i32 [[TMP3]], 2
-; ALWAYS-NEXT:    [[TMP5:%.*]] = sub i32 [[N]], [[TMP4]]
+; ALWAYS-NEXT:    [[TMP1:%.*]] = add nsw i32 [[VF]], -1
+; ALWAYS-NEXT:    [[TMP2:%.*]] = and i32 [[TMP0]], [[TMP1]]
+; ALWAYS-NEXT:    [[TMP5:%.*]] = add nuw nsw i32 [[TMP2]], 1
 ; ALWAYS-NEXT:    [[UMIN:%.*]] = call i32 @llvm.umin.i32(i32 [[VF]], i32 [[TMP5]])
 ; ALWAYS-NEXT:    ret i32 [[UMIN]]
 ;

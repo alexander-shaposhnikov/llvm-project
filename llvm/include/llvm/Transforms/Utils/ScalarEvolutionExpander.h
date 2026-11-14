@@ -336,6 +336,21 @@ public:
   findReusableCastForPtrToAddr(Value *PtrOp, Type *Ty, const DataLayout &DL,
                                function_ref<bool(const CastInst *)> Dominates);
 
+  /// A urem that is truncated, scaled and/or part of a larger sum:
+  ///   Offset + Scale * trunc_or_noop(LHS urem RHS).
+  struct AffineURem {
+    const SCEV *LHS;
+    const SCEV *RHS;
+    APInt Scale;
+    const SCEV *Offset;
+  };
+
+  /// Try to rewrite \p S in terms of a urem, like Z - 4 * (X urem Y) for
+  /// Z + (-4 * X) + (4 * (X /u Y) * Y). Returns std::nullopt if \p S contains
+  /// no urem or expanding the urem would not be cheaper than expanding \p S.
+  LLVM_ABI static std::optional<AffineURem>
+  matchAffineURem(const SCEVAddExpr *S, ScalarEvolution &SE);
+
   /// Find a phi in the exit block of \p S's loop, which must dominate
   /// \p InsertBB, such that \p S can be expanded in \p InsertBB as the phi
   /// plus a simple difference. Returns the phi and the difference, or
